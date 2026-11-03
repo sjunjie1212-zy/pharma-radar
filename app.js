@@ -26,6 +26,17 @@ function trim(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function safeUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
+  try {
+    const url = new URL(value, window.location.href);
+    if (url.protocol === "http:" || url.protocol === "https:") return value;
+  } catch (err) {
+    /* invalid URL */
+  }
+  return "";
+}
+
 function normalizeData(data) {
   if (!data || typeof data !== "object") throw new Error("数据不是有效的 JSON 对象");
   if (!Array.isArray(data.days)) throw new Error("数据结构缺少 days 数组");
@@ -92,10 +103,15 @@ function mBadge(value) {
 
 function card(item, isMust) {
   const dim = normalizeDimension(item.dimension);
-  const node = el("a", "card dim-" + dim.toLowerCase() + (isMust ? " card-must" : ""));
-  node.href = item.url || "#";
-  node.target = "_blank";
-  node.rel = "noopener";
+  const url = safeUrl(item.url);
+  const node = el(url ? "a" : "div", "card dim-" + dim.toLowerCase() + (isMust ? " card-must" : ""));
+  if (url) {
+    node.href = url;
+    node.target = "_blank";
+    node.rel = "noopener";
+  } else {
+    node.classList.add("card-nolink");
+  }
 
   const head = el("div", "card-head");
   head.appendChild(el("span", "dim-badge", dim));
@@ -114,8 +130,13 @@ function card(item, isMust) {
   return node;
 }
 
-function visibleItems(day) {
+function renderableItems(day) {
   const items = Array.isArray(day.items) ? day.items : [];
+  return items.filter((item) => item && typeof item === "object" && !Array.isArray(item));
+}
+
+function visibleItems(day) {
+  const items = renderableItems(day);
   if (state.dim === "all") return items;
   return items.filter((item) => normalizeDimension(item.dimension) === state.dim);
 }
@@ -146,7 +167,7 @@ function updateDayNav(day) {
 function renderDay(dayData) {
   const app = document.getElementById("app");
   if (!app) return;
-  if (!dayData || typeof dayData !== "object") {
+  if (!dayData || typeof dayData !== "object" || Array.isArray(dayData)) {
     renderNotice("没有可显示的日期数据。", "");
     return;
   }
@@ -170,7 +191,8 @@ function renderDay(dayData) {
     mustItems.forEach((item) => grid.appendChild(card(item, true)));
     mustSection.appendChild(grid);
   } else {
-    mustSection.appendChild(el("p", "quiet", "今日无必看"));
+    const dimFiltered = state.dim !== "all" && mustIds.length > 0;
+    mustSection.appendChild(el("p", "quiet", dimFiltered ? "本维度今日无必看" : "今日无必看"));
   }
   section.appendChild(mustSection);
 
@@ -263,6 +285,10 @@ async function load() {
     app.appendChild(el("p", "quiet", "正在加载今日简报…"));
   }
   try {
+    if (window.__ITEMS__ !== undefined) {
+      start(window.__ITEMS__);
+      return;
+    }
     start(await loadData());
   } catch (err) {
     renderNotice(

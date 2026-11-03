@@ -68,7 +68,11 @@ def build(items: list[dict], out_path: str = "data/items.json") -> dict:
         "generated_at": datetime.now(CST).isoformat(timespec="seconds"),
         "days": days,
     }
+    json_text = json.dumps(payload, ensure_ascii=False, indent=1)
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False, indent=1)
+        fh.write(json_text)
+    js_path = os.path.splitext(out_path)[0] + ".js"
+    with open(js_path, "w", encoding="utf-8") as fh:
+        fh.write("window.__ITEMS__ = " + json_text + ";\n")
     return payload

@@ -189,6 +189,10 @@ body {
   outline-offset: 2px;
 }
 
+.card-nolink {
+  cursor: default;
+}
+
 .must-grid .card {
   margin-bottom: 0;
 }
