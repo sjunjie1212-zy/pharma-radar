@@ -380,3 +380,77 @@ body {
     font-size: 1.18rem;
   }
 }
+
+/* ---------- 视图切换与催化剂日历 ---------- */
+
+.views {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.2rem 0 0.6rem;
+}
+
+.view-tab {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 0.25rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.view-tab.active {
+  border-color: var(--d3);
+  background: var(--must-bg);
+  font-weight: 600;
+}
+
+.catalyst-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.catalyst-row {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+
+.catalyst-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.catalyst-date {
+  font-variant-numeric: tabular-nums;
+}
+
+.kind-badge {
+  border: 1px solid var(--d3);
+  color: var(--d3);
+  border-radius: 4px;
+  padding: 0 0.35rem;
+}
+
+.days-left {
+  color: var(--d1);
+  font-weight: 600;
+}
+
+.catalyst-title {
+  margin: 0.3rem 0 0.1rem;
+  font-size: 1rem;
+}
+
+.catalyst-note,
+.catalyst-source {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}

@@ -2,10 +2,13 @@
 "use strict";
 
 const DATA_URL = "./data/items.json";
+const CATALYST_URL = "./data/catalysts.json";
 const DIMENSIONS = ["D1", "D2", "D3", "D4", "D5", "D6"];
 
 const state = {
   data: null,
+  catalysts: null,
+  view: "today",
   dim: "all",
   index: 0,
 };
@@ -45,10 +48,10 @@ function normalizeData(data) {
 
 /* ---------- 读取数据 ---------- */
 
-function loadData() {
+function loadJson(url) {
   // 先尝试 fetch；直接以 file:// 打开时部分浏览器会拦截，
   // 再退回 XMLHttpRequest（部分浏览器允许同目录读取）。
-  return fetch(DATA_URL, { cache: "no-store" })
+  return fetch(url, { cache: "no-store" })
     .then((res) => {
       if (!res.ok) throw new Error("HTTP " + res.status);
       return res.text().then((text) => JSON.parse(text));
@@ -60,10 +63,10 @@ function loadData() {
           try {
             xhr = new XMLHttpRequest();
           } catch (err) {
-            reject(new Error("无法读取 " + DATA_URL));
+            reject(new Error("无法读取 " + url));
             return;
           }
-          xhr.open("GET", DATA_URL, true);
+          xhr.open("GET", url, true);
           xhr.onload = () => {
             if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
               try {
@@ -75,7 +78,7 @@ function loadData() {
               reject(new Error("HTTP " + xhr.status));
             }
           };
-          xhr.onerror = () => reject(new Error("无法读取 " + DATA_URL + "（本地文件访问可能被浏览器拦截）"));
+          xhr.onerror = () => reject(new Error("无法读取 " + url + "（本地文件访问可能被浏览器拦截）"));
           try {
             xhr.send();
           } catch (err) {
@@ -268,6 +271,91 @@ function renderCurrentDay() {
   renderDay(days[state.index]);
 }
 
+function daysUntil(day) {
+  const today = new Date();
+  const todayIso =
+    today.getFullYear() +
+    "-" +
+    String(today.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(today.getDate()).padStart(2, "0");
+  const diff = Date.parse(day + "T00:00:00") - Date.parse(todayIso + "T00:00:00");
+  if (Number.isNaN(diff)) return "";
+  const days = Math.round(diff / 86400000);
+  if (days === 0) return "今天";
+  if (days < 0) return "已过期";
+  return days + " 天后";
+}
+
+function catalystRow(c) {
+  const row = el("div", "catalyst-row");
+  const head = el("div", "catalyst-head");
+  head.appendChild(el("span", "catalyst-date", String(c.date || "")));
+  if (trim(c.kind)) head.appendChild(el("span", "kind-badge", c.kind));
+  const left = daysUntil(String(c.date || ""));
+  if (left) head.appendChild(el("span", "days-left", left));
+  row.appendChild(head);
+
+  const title = [trim(c.entity), trim(c.drug)].filter(Boolean).join(" · ");
+  row.appendChild(el("h3", "catalyst-title", title || "(未知对象)"));
+  if (trim(c.note)) row.appendChild(el("p", "catalyst-note", c.note));
+  if (trim(c.source)) row.appendChild(el("p", "catalyst-source", c.source));
+  return row;
+}
+
+function renderCatalysts(payload) {
+  const app = document.getElementById("app");
+  if (!app) return;
+  const rows =
+    payload && Array.isArray(payload.catalysts)
+      ? payload.catalysts.filter((c) => c && typeof c === "object" && !Array.isArray(c))
+      : [];
+
+  const section = el("section", "catalysts");
+  section.appendChild(el("h2", "day-title", "催化剂日历"));
+  section.appendChild(
+    el("p", "quiet", "未来 90 天的 III 期主要完成时点，按日期排序。日期来自申办方登记，可能改期。")
+  );
+  if (!rows.length) {
+    section.appendChild(el("p", "quiet", "暂无未来事件。"));
+  } else {
+    const list = el("div", "catalyst-list");
+    rows.forEach((c) => list.appendChild(catalystRow(c)));
+    section.appendChild(list);
+  }
+  app.textContent = "";
+  app.appendChild(section);
+}
+
+function setView(view) {
+  state.view = view === "catalysts" ? "catalysts" : "today";
+  document.querySelectorAll(".view-tab").forEach((btn) => {
+    const on = btn.dataset.view === state.view;
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  const tabs = document.querySelector(".tabs");
+  if (tabs) tabs.hidden = state.view !== "today";
+  const dayNav = document.getElementById("day-nav");
+  if (dayNav && state.view !== "today") dayNav.hidden = true;
+  if (state.view === "catalysts") {
+    if (state.catalysts) {
+      renderCatalysts(state.catalysts);
+    } else {
+      loadJson(CATALYST_URL)
+        .then((payload) => {
+          state.catalysts = payload;
+          renderCatalysts(payload);
+        })
+        .catch((err) =>
+          renderNotice("无法读取催化剂数据。", err && err.message ? err.message : String(err))
+        );
+    }
+    return;
+  }
+  renderCurrentDay();
+}
+
 function start(data) {
   state.data = normalizeData(data);
   state.index = 0;
@@ -285,11 +373,12 @@ async function load() {
     app.appendChild(el("p", "quiet", "正在加载今日简报…"));
   }
   try {
+    if (window.__CATALYSTS__ !== undefined) state.catalysts = window.__CATALYSTS__;
     if (window.__ITEMS__ !== undefined) {
       start(window.__ITEMS__);
       return;
     }
-    start(await loadData());
+    start(await loadJson(DATA_URL));
   } catch (err) {
     renderNotice(
       "无法显示今日简报：读取 " + DATA_URL + " 失败。",
@@ -322,6 +411,9 @@ function bind() {
   document.querySelectorAll(".tab").forEach((btn) => {
     btn.addEventListener("click", () => setDim(btn.dataset.dim));
   });
+  document.querySelectorAll(".view-tab").forEach((btn) => {
+    btn.addEventListener("click", () => setView(btn.dataset.view));
+  });
   const prev = document.getElementById("prev-day");
   const next = document.getElementById("next-day");
   if (prev) prev.addEventListener("click", () => stepDay(1));
@@ -329,6 +421,7 @@ function bind() {
 }
 
 window.renderDay = renderDay;
+window.renderCatalysts = renderCatalysts;
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {

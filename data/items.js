@@ -1,5 +1,5 @@
 window.__ITEMS__ = {
- "generated_at": "2026-11-03T21:06:13+08:00",
+ "generated_at": "2026-11-03T21:44:06+08:00",
  "days": [
   {
    "date": "2026-11-03",
@@ -24,6 +24,58 @@ window.__ITEMS__ = {
      "m": 3,
      "why": "",
      "cluster_id": "e65f5ced72a3464f"
+    },
+    {
+     "id": "097029db4f6ca727",
+     "date": "2026-11-03",
+     "published_at": "2026-11-03",
+     "source": "trials",
+     "source_weight": 1.1,
+     "lang": "en",
+     "title": "Phase 3 Study of rhTPO for Thrombocytopenia in Chronic Liver Disease Patients Undergoing Elective Invasive Procedures",
+     "title_zh": "",
+     "url": "https://clinicaltrials.gov/study/NCT07911800",
+     "company": [
+      "MIBIO PTE. LTD."
+     ],
+     "drug": [
+      "rhTPO"
+     ],
+     "target": [],
+     "ta": [
+      "Thrombocytopenia Associated With Chronic Liver Disease"
+     ],
+     "event_type": "clinical",
+     "dimension": "D2",
+     "m": 3,
+     "why": "",
+     "cluster_id": "097029db4f6ca727"
+    },
+    {
+     "id": "0e431abd91c25b5b",
+     "date": "2026-11-03",
+     "published_at": "2026-11-02",
+     "source": "trials",
+     "source_weight": 1.1,
+     "lang": "en",
+     "title": "A Study to Investigate the Efficacy and Safety of Zelicapavir Compared With Placebo in Adults With RSV Who Are at High Risk for Severe Disease",
+     "title_zh": "",
+     "url": "https://clinicaltrials.gov/study/NCT07908381",
+     "company": [
+      "Enanta Pharmaceuticals, Inc"
+     ],
+     "drug": [
+      "zelicapavir"
+     ],
+     "target": [],
+     "ta": [
+      "RSV"
+     ],
+     "event_type": "clinical",
+     "dimension": "D2",
+     "m": 3,
+     "why": "",
+     "cluster_id": "0e431abd91c25b5b"
     },
     {
      "id": "4bbed7540c17be4f",
@@ -84,6 +136,26 @@ window.__ITEMS__ = {
      "m": 2,
      "why": "",
      "cluster_id": "1e4b87a9dc27bdc0"
+    },
+    {
+     "id": "df5771b7341b0501",
+     "date": "2026-11-03",
+     "published_at": "2026-11-02",
+     "source": "pubmed",
+     "source_weight": 1.0,
+     "lang": "en",
+     "title": "[Continuous glucose monitoring in diabetes: Clinical practice guidelines for primary care from SEMERGEN, RedGDPS, semFYC, SEMG and FAECAP]",
+     "title_zh": "",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/42971815/",
+     "company": [],
+     "drug": [],
+     "target": [],
+     "ta": [],
+     "event_type": "science",
+     "dimension": "D1",
+     "m": 2,
+     "why": "",
+     "cluster_id": "df5771b7341b0501"
     }
    ]
   }

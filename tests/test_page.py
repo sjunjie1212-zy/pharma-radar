@@ -79,6 +79,33 @@ class TestPageBehaviour(unittest.TestCase):
         js = (ROOT / "app.js").read_text(encoding="utf-8")
         self.assertIn("本维度今日无必看", js)
 
+    def test_html_has_catalyst_view_switch(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn('data-view="today"', html)
+        self.assertIn('data-view="catalysts"', html)
+
+    def test_html_loads_catalysts_js_before_app_js(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        cat_pos = html.find('<script src="./data/catalysts.js"></script>')
+        app_pos = html.find('<script src="./app.js"></script>')
+        self.assertNotEqual(cat_pos, -1)
+        self.assertLess(cat_pos, app_pos)
+
+    def test_js_exposes_render_catalysts(self):
+        js = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertRegex(js, r"window\.renderCatalysts\s*=\s*renderCatalysts")
+        self.assertIn("./data/catalysts.json", js)
+
+    def test_js_shows_days_until(self):
+        js = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn("天后", js)
+        self.assertIn("今天", js)
+
+    def test_css_has_catalyst_styles(self):
+        css = (ROOT / "style.css").read_text(encoding="utf-8")
+        for marker in (".view-tab", ".catalyst-row", ".kind-badge"):
+            self.assertIn(marker, css)
+
 
 if __name__ == "__main__":
     unittest.main()

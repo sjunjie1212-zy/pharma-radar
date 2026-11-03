@@ -14,6 +14,10 @@
   </div>
   <span id="generated" class="muted"></span>
 </header>
+<nav class="views" aria-label="切换视图">
+  <button class="view-tab active" type="button" data-view="today" aria-pressed="true">今日</button>
+  <button class="view-tab" type="button" data-view="catalysts" aria-pressed="false">催化剂</button>
+</nav>
 <nav class="tabs" aria-label="按维度筛选">
   <button class="tab active" type="button" data-dim="all" aria-pressed="true">全部</button>
   <button class="tab" type="button" data-dim="D1" aria-pressed="false">D1 格局</button>
@@ -29,6 +33,7 @@
   <button id="next-day" class="day-btn" type="button">后一天 →</button>
 </nav>
 <main id="app"></main>
+<script src="./data/catalysts.js"></script>
 <script src="./data/items.js"></script>
 <script src="./app.js"></script>
 </body>
