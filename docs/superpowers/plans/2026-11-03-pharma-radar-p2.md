@@ -750,6 +750,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 ```python
 # tests/test_openfda.py
 import unittest
+from datetime import date
 from unittest import mock
 
 from sources import openfda
@@ -808,8 +809,18 @@ class TestFetchAll(unittest.TestCase):
         resp = mock.Mock(status_code=200)
         resp.json.return_value = {"results": [NDA]}
         with mock.patch.object(openfda.requests, "get", return_value=resp):
-            out = openfda.fetch_all()
+            out = openfda.fetch_all(today=date(2026, 11, 3))
         self.assertEqual([i["source"] for i in out], ["openfda"])
+
+    def test_old_orig_approval_dropped(self):
+        # openFDA 的区间命中可能来自别的 submission，原始批准日期可能很旧。
+        old = dict(NDA, submissions=[{"submission_type": "ORIG",
+                                      "submission_status": "AP",
+                                      "submission_status_date": "20200101"}])
+        resp = mock.Mock(status_code=200)
+        resp.json.return_value = {"results": [old]}
+        with mock.patch.object(openfda.requests, "get", return_value=resp):
+            self.assertEqual(openfda.fetch_all(today=date(2026, 11, 3)), [])
 
 
 if __name__ == "__main__":
@@ -909,7 +920,10 @@ def fetch_all(days: int = LOOKBACK_DAYS, today: date | None = None,
         log.info("openfda: no approvals in window")
         return []
     resp.raise_for_status()
-    return parse_results(resp.json().get("results") or [])
+    floor = (today - timedelta(days=days)).isoformat()
+    # 区间命中可能来自同一申请下的其它 submission，原始批准日期要在本地再卡一次。
+    return [i for i in parse_results(resp.json().get("results") or [])
+            if i["published_at"] >= floor]
 ```
 
 `pipeline/gate.py` — `TRUSTED_SOURCES` 追加 `"openfda"`：
