@@ -10,6 +10,7 @@ from pipeline.build import append_raw, build, load_raw
 from pipeline.dedupe import assign_clusters, dedupe
 from pipeline.scoring import enrich
 from pipeline.select import select
+from sources import reg_cn
 from sources.rss_en import fetch_all
 
 CST = ZoneInfo("Asia/Shanghai")
@@ -19,10 +20,11 @@ log = logging.getLogger("run")
 
 def collect() -> list[dict]:
     items: list[dict] = []
-    try:
-        items.extend(fetch_all())
-    except Exception as exc:
-        log.error("rss_en failed: %s", exc)
+    for fn in (fetch_all, reg_cn.fetch_all):
+        try:
+            items.extend(fn())
+        except Exception as exc:  # 单源失败不影响整体
+            log.error("%s failed: %s", fn.__module__, exc)
     return items
 
 
