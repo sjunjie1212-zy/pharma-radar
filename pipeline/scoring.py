@@ -24,7 +24,7 @@ _EVENT_KEYWORDS: list[tuple[str, tuple[str, ...]]] = [
                 "pbm", "disclosure rule")),
     ("commercial", ("销售额", "营收", "财报", "出海", "裁员", "管线调整", "业务重组", "公司重组",
                     "revenue", "sales", "earnings", "layoff", "restructur",
-                    "bankruptcy", "chapter 11", "ipo", "pbm", "cost cut", "cost-cutting",
+                    "bankruptcy", "chapter 11", "ipo", "cost cut", "cost-cutting",
                     "biosimilar")),
 ]
 
