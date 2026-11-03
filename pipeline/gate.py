@@ -41,7 +41,7 @@ GATED_SOURCES: tuple[str, ...] = ("stat", "nmpa-news", "nature-biotech")
 # 专业医药源白名单：整源放行。未知源不在名单内，按需过词表处理。
 TRUSTED_SOURCES: tuple[str, ...] = (
     "biopharmadive", "endpoints", "fierce-biotech", "fierce-pharma", "nmpa", "trials",
-    "openfda",
+    "openfda", "pubmed",
 )
 
 # 词干匹配（左边界，无右边界）：覆盖 therapy/therapies、vaccine/vaccines、
