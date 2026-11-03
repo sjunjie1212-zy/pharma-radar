@@ -6,11 +6,14 @@
 """
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, time, timedelta
 from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 
 CST = ZoneInfo("Asia/Shanghai")
+
+_DATE_ONLY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def resolve_anchor(date_arg: str | None) -> datetime:
@@ -52,6 +55,12 @@ def in_window(item: dict, now: datetime) -> bool:
         # 时间戳缺失或解析失败时，退回到「date == 本期日期（北京时间）」。
         # 平时本期日期就是运行日；`--date` 补跑时是补跑的那一期，与运行时刻无关。
         return item.get("date", "") == now.astimezone(CST).strftime("%Y-%m-%d")
+    if _DATE_ONLY.match((item.get("published_at") or "").strip()):
+        # 结构化源（临床试验、openFDA、PubMed）只给日期。窗口跨两个日历日，
+        # 落在其中任何一天都无法排除，两天都收。
+        anchor_day = now.astimezone(CST).date()
+        day = ts.astimezone(CST).date()
+        return day in (anchor_day, anchor_day - timedelta(days=1))
     start = now - timedelta(hours=24)
     # 左边界取开区间：恰好 24 小时前发布的条目属于上一期（见 test_exactly_24h_old_excluded）。
     return start < ts < now

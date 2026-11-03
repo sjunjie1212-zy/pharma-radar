@@ -51,6 +51,22 @@ class TestInWindow(unittest.TestCase):
         self.assertTrue(in_window(item("", "2026-11-03"), self.now))
         self.assertFalse(in_window(item("", "2026-11-02"), self.now))
 
+    def test_date_only_yesterday_included(self):
+        self.assertTrue(in_window(item("2026-11-02"), self.now))
+
+    def test_date_only_today_included(self):
+        self.assertTrue(in_window(item("2026-11-03"), self.now))
+
+    def test_date_only_two_days_ago_excluded(self):
+        self.assertFalse(in_window(item("2026-11-01"), self.now))
+
+    def test_date_only_future_excluded(self):
+        self.assertFalse(in_window(item("2026-11-04"), self.now))
+
+    def test_timestamped_item_still_uses_24h_rule(self):
+        # 有时刻的条目不受「两日」放宽影响：前一日 15:00 仍属于上一期。
+        self.assertFalse(in_window(item("2026-11-02T15:00:00+08:00"), self.now))
+
 
 class TestStampIssueDate(unittest.TestCase):
     def test_overnight_gets_run_date(self):
