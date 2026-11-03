@@ -5,19 +5,21 @@ import re
 
 # 顺序即优先级：先匹配到的胜出
 _EVENT_KEYWORDS: list[tuple[str, tuple[str, ...]]] = [
-    ("deal", ("授权", "许可", "收购", "并购", "对外授权", "首付款", "license", "licensing",
-              "acquisition", "acquire", "merger", "collaboration deal", "buyout")),
+    ("deal", ("授权", "对外授权", "对外许可", "许可协议", "专利许可", "收购", "并购", "首付款",
+              "license", "licensing", "acquisition", "acquire", "merger", "collaboration deal",
+              "buyout", "deal")),
     ("payment", ("医保", "集采", "谈判", "降价", "支付", "报销", "nrdl", "reimbursement",
                  "medicare", "price cut")),
     ("regulatory", ("获批", "批准", "受理", "上市申请", "附条件", "优先审评", "突破性疗法",
                     "approval", "approved", "approves", "filing", "complete response letter",
                     "regulatory approval")),
-    ("clinical", ("iii期", "3期", "临床", "读出", "主要终点", "达到终点", "未达到", "终止",
-                  "暂停", "头对头", "phase 3", "phase iii", "topline", "primary endpoint",
-                  "readout", "halted", "discontinued")),
-    ("policy", ("指导原则", "法规", "合规", "备案", "监管新规", "guidance", "policy", "regulation")),
-    ("commercial", ("销售额", "营收", "财报", "出海", "裁员", "管线调整", "重组", "revenue",
-                    "sales", "earnings", "layoff", "restructur")),
+    ("clinical", ("iii期", "3期", "临床", "读出", "主要终点", "达到终点", "未达到",
+                  "试验终止", "研究中止", "提前终止", "暂停", "头对头", "phase 3", "phase iii",
+                  "topline", "primary endpoint", "readout", "halted", "discontinued")),
+    ("policy", ("指导原则", "法规", "合规", "备案", "新规", "监管新规", "guidance", "policy",
+                "regulation")),
+    ("commercial", ("销售额", "营收", "财报", "出海", "裁员", "管线调整", "业务重组", "公司重组",
+                    "revenue", "sales", "earnings", "layoff", "restructur")),
 ]
 
 _DIMENSION_BY_EVENT = {
@@ -30,12 +32,13 @@ _DIMENSION_BY_EVENT = {
     "science": "D1",
 }
 
-_GUIDELINE = ("指南", "共识", "guideline", "consensus", "standard of care", "治疗格局")
+_GUIDELINE = ("指南", "共识", "guideline", "consensus")
 
 _M5 = ("首个", "first-in-class", "first in class", "指南更新", "指南改写", "class effect",
        "撤市", "暂停", "提前终止", "监管规则", "集采规则", "医保规则改变", "推翻")
 _M4 = ("获批", "批准", "approves", "approved", "主要终点", "primary endpoint", "医保目录",
-       "纳入", "上市申请", "受理", "指导原则", "1亿美元", "1亿美元", "$1 billion", "$1bn")
+       "纳入医保", "纳入指南", "指导原则", "1亿美元", "1亿美元", "$1 billion", "$1bn",
+       "readout", "topline")
 _M3 = ("iii期", "phase 3", "phase iii", "启动", "initiated", "早期", "受理",
        "人事", "任命", "appoint", "裁员")
 
@@ -43,8 +46,19 @@ _M3 = ("iii期", "phase 3", "phase iii", "启动", "initiated", "早期", "受�
 # 需要识别时，用带空格的完整形式，或改 _hit 为带词边界的正则。
 
 
+_ASCII_ALNUM = re.compile(r"^[a-z0-9]+$")
+
+
 def _hit(text: str, words: tuple[str, ...]) -> bool:
-    return any(w in text for w in words)
+    """命中关键词。纯 ASCII 字母/数字词要求左词边界（license 可命中 licenses，
+    filing 不再命中 profiling）；中文等其它词仍按子串匹配。"""
+    for w in words:
+        if _ASCII_ALNUM.match(w):
+            if re.search(r"(?<![a-z0-9])" + re.escape(w), text):
+                return True
+        elif w in text:
+            return True
+    return False
 
 
 def classify_event(title: str) -> str:

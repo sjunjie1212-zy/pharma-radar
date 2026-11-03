@@ -22,10 +22,22 @@ class TestClassifyEvent(unittest.TestCase):
     def test_fallback_science(self):
         self.assertEqual(classify_event("New mechanism linking inflammation to fibrosis"), "science")
 
+    def test_license_is_policy_not_deal(self):
+        self.assertEqual(classify_event("药品生产许可新规"), "policy")
+
+    def test_profiling_does_not_match_filing(self):
+        self.assertEqual(classify_event("Genomic profiling reveals resistance"), "science")
+
+    def test_cooperative_termination_is_not_clinical(self):
+        self.assertNotEqual(classify_event("公司宣布合作终止"), "clinical")
+
+    def test_recombinant_protein_is_not_commercial(self):
+        self.assertNotEqual(classify_event("重组蛋白疫苗机制研究"), "commercial")
+
 
 class TestDimension(unittest.TestCase):
     def test_guideline_goes_D1(self):
-        self.assertEqual(assign_dimension("science", "CSCO 指南更新：一线治疗顺序调整"), "D1")
+        self.assertEqual(assign_dimension("regulatory", "CSCO 指南更新：一线治疗顺序调整"), "D1")
 
     def test_regulatory_goes_D3(self):
         self.assertEqual(assign_dimension("regulatory", "FDA approves drug X"), "D3")
@@ -53,11 +65,21 @@ class TestScoreM(unittest.TestCase):
     def test_unknown_is_2(self):
         self.assertEqual(score_m("science", "Researchers describe a pathway"), 2)
 
+    def test_acceptance_is_3(self):
+        self.assertEqual(score_m("regulatory", "NMPA 受理新药上市申请"), 3)
+
+    def test_topline_readout_is_4(self):
+        self.assertEqual(score_m("clinical", "Phase 3 topline readout"), 4)
+
+    def test_enrollment_is_not_4(self):
+        self.assertNotEqual(score_m("clinical", "纳入 120 例患者"), 4)
+
 
 class TestEnrich(unittest.TestCase):
     def test_enrich_sets_fields(self):
         item = {"title": "FDA approves drug B", "event_type": "science", "dimension": "D6", "m": 1}
         out = enrich(item)
+        self.assertIs(out, item)
         self.assertEqual(out["event_type"], "regulatory")
         self.assertEqual(out["dimension"], "D3")
         self.assertEqual(out["m"], 4)
