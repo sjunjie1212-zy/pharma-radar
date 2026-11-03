@@ -73,6 +73,8 @@ def make_item(
     drug: list[str] | None = None,
     target: list[str] | None = None,
     ta: list[str] | None = None,
+    event_type: str = "",
+    dimension: str = "",
 ) -> dict:
     published_at = (published_at or "").strip()
     return {
@@ -89,8 +91,8 @@ def make_item(
         "drug": list(drug or []),
         "target": list(target or []),
         "ta": list(ta or []),
-        "event_type": "science",
-        "dimension": "D6",
+        "event_type": event_type,
+        "dimension": dimension,
         "m": 1,
         "why": "",
         "cluster_id": "",

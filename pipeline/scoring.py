@@ -110,8 +110,10 @@ def score_m(event_type: str, title: str) -> int:
 
 
 def enrich(item: dict) -> dict:
-    event_type = classify_event(item["title"])
+    # 结构化源（临床试验、openFDA、PubMed）的有效信息不在标题里，
+    # 由适配器直接声明事件类型与维度；空串才交给规则判定。
+    event_type = item.get("event_type") or classify_event(item["title"])
     item["event_type"] = event_type
-    item["dimension"] = assign_dimension(event_type, item["title"])
+    item["dimension"] = item.get("dimension") or assign_dimension(event_type, item["title"])
     item["m"] = score_m(event_type, item["title"])
     return item

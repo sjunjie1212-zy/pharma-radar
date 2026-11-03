@@ -29,10 +29,17 @@ class TestMakeItem(unittest.TestCase):
                   "title", "title_zh", "url", "company", "drug", "target", "ta",
                   "event_type", "dimension", "m", "why", "cluster_id"):
             self.assertIn(k, it)
-        self.assertEqual(it["dimension"], "D6")
+        self.assertEqual(it["event_type"], "")
+        self.assertEqual(it["dimension"], "")
         self.assertEqual(it["m"], 1)
         self.assertEqual(it["company"], [])
         self.assertEqual(it["date"], "2026-11-03")
+
+    def test_preset_event_type_and_dimension_are_kept(self):
+        it = make_item(title="A Study of GB-0895", url="https://ct.gov/x", source="trials",
+                       published_at="2026-11-03", event_type="clinical", dimension="D2")
+        self.assertEqual(it["event_type"], "clinical")
+        self.assertEqual(it["dimension"], "D2")
 
     def test_id_derived_from_url(self):
         it = make_item(title="t", url="https://a.com/x", source="s", published_at="2026-11-03T10:00:00")

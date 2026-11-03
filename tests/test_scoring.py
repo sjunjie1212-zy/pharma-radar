@@ -103,12 +103,26 @@ class TestScoreM(unittest.TestCase):
 
 class TestEnrich(unittest.TestCase):
     def test_enrich_sets_fields(self):
-        item = {"title": "FDA approves drug B", "event_type": "science", "dimension": "D6", "m": 1}
+        item = {"title": "FDA approves drug B", "event_type": "", "dimension": "", "m": 1}
         out = enrich(item)
         self.assertIs(out, item)
         self.assertEqual(out["event_type"], "regulatory")
         self.assertEqual(out["dimension"], "D3")
         self.assertEqual(out["m"], 4)
+
+    def test_enrich_keeps_source_preset(self):
+        from pipeline.scoring import enrich
+        out = enrich({"title": "A Study to Investigate GB-0895",
+                      "event_type": "clinical", "dimension": "", "m": 1})
+        self.assertEqual(out["event_type"], "clinical")
+        self.assertEqual(out["dimension"], "D2")
+        self.assertEqual(out["m"], 3)
+
+    def test_enrich_keeps_preset_dimension(self):
+        from pipeline.scoring import enrich
+        out = enrich({"title": "Continuous glucose monitoring: clinical practice guidelines",
+                      "event_type": "science", "dimension": "D1", "m": 1})
+        self.assertEqual(out["dimension"], "D1")
 
     def test_enrich_unmatched_title_lands_D6(self):
         item = {"title": "Researchers describe a pathway"}
