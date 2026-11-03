@@ -12,15 +12,20 @@ _EVENT_KEYWORDS: list[tuple[str, tuple[str, ...]]] = [
                  "medicare", "price cut")),
     ("regulatory", ("获批", "批准", "受理", "上市申请", "附条件", "优先审评", "突破性疗法",
                     "approval", "approved", "approves", "filing", "complete response letter",
-                    "regulatory approval")),
+                    "regulatory approval",
+                    "fda ok", "fda oks", "fda clearance", "wins fda approval")),
     ("clinical", ("iii期", "3期", "临床", "读出", "主要终点", "达到终点", "未达到",
                   "试验终止", "研究中止", "提前终止", "终止试验", "终止临床", "终止 iii",
                   "暂停", "头对头", "phase 3", "phase iii",
-                  "topline", "primary endpoint", "readout", "halted", "discontinued")),
+                  "topline", "primary endpoint", "readout", "halted", "discontinued",
+                  "key trial", "succeeds in")),
     ("policy", ("指导原则", "法规", "合规", "备案", "新规", "监管新规", "guidance", "policy",
-                "regulation")),
+                "regulation",
+                "pbm", "disclosure rule")),
     ("commercial", ("销售额", "营收", "财报", "出海", "裁员", "管线调整", "业务重组", "公司重组",
-                    "revenue", "sales", "earnings", "layoff", "restructur")),
+                    "revenue", "sales", "earnings", "layoff", "restructur",
+                    "bankruptcy", "chapter 11", "ipo", "pbm", "cost cut", "cost-cutting",
+                    "biosimilar")),
 ]
 
 _DIMENSION_BY_EVENT = {
@@ -48,7 +53,8 @@ _M4 = ("获批", "批准", "approves", "approved", "主要终点", "primary endp
        "纳入医保", "纳入指南", "指导原则", "1亿美元", "1亿美元", "$1 billion", "$1bn",
        "readout", "topline")
 _M3 = ("iii期", "phase 3", "phase iii", "启动", "initiated", "早期", "受理",
-       "人事", "任命", "appoint", "裁员")
+       "人事", "任命", "appoint", "裁员",
+       "bankruptcy", "chapter 11", "ipo")
 
 # 注意：不要加入 nda / bla / ind / crl 这类三字母缩写，子串会误伤 standard、substantial 等常用词。
 # 需要识别时，用带空格的完整形式，或改 _hit 为带词边界的正则。

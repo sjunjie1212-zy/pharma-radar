@@ -117,5 +117,43 @@ class TestEnrich(unittest.TestCase):
         self.assertEqual(out["dimension"], "D6")
 
 
+class TestEventKeywordsAdded(unittest.TestCase):
+    def test_fda_oks_is_regulatory(self):
+        title = "STAT+: FDA OKs generic HIV prevention shot, widening access"
+        self.assertEqual(classify_event(title), "regulatory")
+        self.assertEqual(assign_dimension("regulatory", title), "D3")
+        self.assertEqual(score_m("regulatory", title), 3)
+
+    def test_bankruptcy_is_commercial(self):
+        title = "Karyopharm, deep in debt, to sell itself in bankruptcy"
+        self.assertEqual(classify_event(title), "commercial")
+        self.assertEqual(assign_dimension("commercial", title), "D5")
+        self.assertEqual(score_m("commercial", title), 3)
+
+    def test_ipo_is_commercial(self):
+        title = "Aspen raises a $141M IPO in pursuit of a cell therapy"
+        self.assertEqual(classify_event(title), "commercial")
+        self.assertEqual(score_m("commercial", title), 3)
+
+    def test_key_trial_is_clinical(self):
+        title = "Genmab soars to record highs after cancer drug succeeds in key trial"
+        self.assertEqual(classify_event(title), "clinical")
+        self.assertEqual(assign_dimension("clinical", title), "D2")
+
+    def test_pbm_rule_is_policy(self):
+        title = "Labor Department finalizes sweeping PBM disclosure rule"
+        self.assertEqual(classify_event(title), "policy")
+
+    def test_biosimilar_is_commercial(self):
+        title = "Keytruda biosimilars are coming — but they face an uphill battle"
+        self.assertEqual(classify_event(title), "commercial")
+
+    def test_clears_stays_out_of_regulatory(self):
+        # "clears" 在英文里太泛（Boeing clears FAA hurdle、court clears executive），不收。
+        for title in ("Boeing clears FAA hurdle for new jet",
+                      "Court clears former pharma executive"):
+            self.assertNotEqual(classify_event(title), "regulatory")
+
+
 if __name__ == "__main__":
     unittest.main()
