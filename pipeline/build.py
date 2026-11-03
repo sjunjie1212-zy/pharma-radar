@@ -7,6 +7,8 @@ from collections import defaultdict
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from pipeline.select import select
+
 CST = ZoneInfo("Asia/Shanghai")
 
 
@@ -57,12 +59,10 @@ def build(items: list[dict], out_path: str = "data/items.json") -> dict:
 
     days = []
     for date in sorted(by_date, reverse=True):
-        rows = sorted(
-            by_date[date],
-            key=lambda i: (i.get("m", 0), i.get("source_weight", 0.0), i.get("published_at", "")),
-            reverse=True,
-        )
-        days.append({"date": date, "must": [r["id"] for r in rows if _is_must(r)], "items": rows})
+        # 渲染时再截断一次：同日重跑会累积 raw，不能让配额在上游被绕过。
+        rows = select(by_date[date])
+        must = [r["id"] for r in rows if _is_must(r)][:5]
+        days.append({"date": date, "must": must, "items": rows})
 
     payload = {
         "generated_at": datetime.now(CST).isoformat(timespec="seconds"),

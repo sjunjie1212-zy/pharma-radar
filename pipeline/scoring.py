@@ -30,10 +30,17 @@ _DIMENSION_BY_EVENT = {
     "deal": "D5",
     "commercial": "D5",
     "policy": "D6",
-    "science": "D1",
+    # 冲突规则：无法判定时进 D6，不再默认落到疾病格局 D1。
+    "science": "D6",
 }
 
 _GUIDELINE = ("指南", "共识", "guideline", "consensus")
+
+# 显式的科学/疾病格局信号仍归 D1（仅当事件类型未匹配到其它规则时）。
+_D1_SIGNALS = ("机制", "机理", "流行病学", "未满足需求", "标准治疗", "患者组织",
+               "疾病负担", "病理", "mechanism", "epidemiology", "unmet need",
+               "standard of care", "patient advocacy", "pathophysiology",
+               "disease burden", "pathogenesis", "etiology")
 
 _M5 = ("首个", "first-in-class", "first in class", "指南更新", "指南改写", "class effect",
        "撤市", "暂停", "提前终止", "监管规则", "集采规则", "医保规则改变", "推翻")
@@ -77,6 +84,8 @@ def classify_event(title: str) -> str:
 def assign_dimension(event_type: str, title: str) -> str:
     low = (title or "").lower()
     if _hit(low, _GUIDELINE):
+        return "D1"
+    if event_type == "science" and _hit(low, _D1_SIGNALS):
         return "D1"
     return _DIMENSION_BY_EVENT.get(event_type, "D6")
 
