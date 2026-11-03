@@ -66,6 +66,17 @@ class TestDimension(unittest.TestCase):
     def test_non_guideline_treatment_landscape_is_not_D1(self):
         self.assertEqual(assign_dimension("regulatory", "治疗格局变化"), "D3")
 
+    def test_unmatched_science_goes_D6(self):
+        self.assertEqual(assign_dimension("science", "Researchers describe a pathway"), "D6")
+
+    def test_explicit_science_signal_goes_D1(self):
+        self.assertEqual(
+            assign_dimension("science", "New mechanism linking inflammation to fibrosis"), "D1"
+        )
+
+    def test_explicit_disease_landscape_signal_goes_D1(self):
+        self.assertEqual(assign_dimension("science", "Epidemiology of unmet need in NSCLC"), "D1")
+
 
 class TestScoreM(unittest.TestCase):
     def test_class_level_readout_is_5(self):
@@ -98,6 +109,12 @@ class TestEnrich(unittest.TestCase):
         self.assertEqual(out["event_type"], "regulatory")
         self.assertEqual(out["dimension"], "D3")
         self.assertEqual(out["m"], 4)
+
+    def test_enrich_unmatched_title_lands_D6(self):
+        item = {"title": "Researchers describe a pathway"}
+        out = enrich(item)
+        self.assertEqual(out["event_type"], "science")
+        self.assertEqual(out["dimension"], "D6")
 
 
 if __name__ == "__main__":

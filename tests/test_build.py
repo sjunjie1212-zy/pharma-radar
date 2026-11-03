@@ -6,9 +6,9 @@ import unittest
 from pipeline.build import append_raw, build, load_raw
 
 
-def _item(i, date="2026-11-03", m=4, dim="D3"):
+def _item(i, date="2026-11-03", m=4, dim="D3", published_at=None):
     return {
-        "id": i, "date": date, "published_at": f"{date}T10:00:00", "source": "s",
+        "id": i, "date": date, "published_at": published_at or f"{date}T10:00:00", "source": "s",
         "source_weight": 1.0, "lang": "en", "title": f"title {i}", "title_zh": "",
         "url": f"https://e.com/{i}", "company": [], "drug": [], "target": [], "ta": [],
         "event_type": "regulatory", "dimension": dim, "m": m, "why": "", "cluster_id": i,
@@ -43,6 +43,56 @@ class TestBuild(unittest.TestCase):
             out = pathlib.Path(tmp) / "items.json"
             data = build([_item("a", date="2026-11-01"), _item("b", date="2026-11-03")], out_path=str(out))
             self.assertEqual([d["date"] for d in data["days"]], ["2026-11-03", "2026-11-01"])
+
+    def test_render_enforces_daily_and_per_dimension_caps(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = pathlib.Path(tmp) / "items.json"
+            items = [_item(f"{dim}-{n}", dim=dim) for dim in ("D2", "D3", "D4", "D5")
+                     for n in range(6)]
+            items.append(_item("D1-only", dim="D1"))
+            self.assertEqual(len(items), 25)
+            data = build(items, out_path=str(out))
+            rows = data["days"][0]["items"]
+            self.assertLessEqual(len(rows), 20)
+            for dim in {r["dimension"] for r in rows}:
+                self.assertLessEqual(sum(1 for r in rows if r["dimension"] == dim), 5)
+
+    def test_build_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = pathlib.Path(tmp) / "items.json"
+            items = [_item(f"{dim}-{n}", dim=dim) for dim in ("D2", "D3", "D4", "D5")
+                     for n in range(6)]
+            first = build(items, out_path=str(out))
+            second = build(items, out_path=str(out))
+            self.assertEqual(first["days"], second["days"])
+
+    def test_day_without_required_dimensions_builds_without_duplicates(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = pathlib.Path(tmp) / "items.json"
+            items = [_item(f"d6-{n}", dim="D6") for n in range(25)]
+            data = build(items, out_path=str(out))
+            self.assertEqual(len(data["days"]), 1)
+            rows = data["days"][0]["items"]
+            self.assertLessEqual(len(rows), 20)
+            ids = [r["id"] for r in rows]
+            self.assertEqual(len(ids), len(set(ids)))
+            self.assertTrue(all(r["dimension"] == "D6" for r in rows))
+
+    def test_must_is_capped_at_five_in_rank_order(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = pathlib.Path(tmp) / "items.json"
+            dims = ("D1", "D2", "D3", "D4", "D5", "D1", "D3")
+            items = [
+                _item(f"m{n}", m=5, dim=dims[n - 1],
+                      published_at=f"2026-11-03T{n:02d}:00:00")
+                for n in range(1, 8)
+            ]
+            data = build(items, out_path=str(out))
+            day = data["days"][0]
+            self.assertEqual(len(day["must"]), 5)
+            self.assertEqual(day["must"], ["m7", "m6", "m5", "m4", "m3"])
+            item_ids = {r["id"] for r in day["items"]}
+            self.assertTrue(set(day["must"]) <= item_ids)
 
     def test_js_artifact_matches_json_payload(self):
         with tempfile.TemporaryDirectory() as tmp:
