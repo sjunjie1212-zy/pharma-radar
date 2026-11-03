@@ -133,7 +133,7 @@ sources/*.py            每个源一个适配器，输出统一 Item
   ├─ reg_cn.py          NMPA 公告、CDE 受理与指导原则
   ├─ trials.py          ClinicalTrials.gov / 中国药物临床试验登记平台
   ├─ openfda.py         openFDA 获批、标签、FAERS 信号
-  ├─ media_cn.py        医药媒体（经 pyrecrawl，走本机代理）
+  ├─ media_cn.py        中文医药媒体（静态页面 + 本机代理；pyrecrawl 仅作人工补抓）
   └─ filings.py         港交所 + A 股公告
         ↓
 filter.py               去重 → 跨源聚类 → 规则打分 → 维度分配 → 配额截断
@@ -152,9 +152,21 @@ GitHub Pages            纯静态 HTML/CSS/JS
 | `rss_en.py` | Endpoints News、Fierce Biotech / Fierce Pharma、STAT、BioPharma Dive、Nature Biotechnology | en |
 | `reg_cn.py` | NMPA 药品公告、CDE 受理与指导原则发布 | zh |
 | `filings.py` | 港交所披露易、上交所/深交所公告（医药板块） | zh |
-| `media_cn.py` | 医药魔方、药智网、界面新闻医药、第一财经医药、36 氪医疗 | zh |
+| `media_cn.py` | 生物谷、药智新闻、药时代 | zh |
 
 源可增删，适配器接口不变。新增源只需实现「取回 + 归一化为 Item」。
+
+**决定（2026-11-04，取代上表的初版源清单）**：pyrecrawl 只提供 MCP stdio 服务，没有 HTTP/CLI/库接口，`run.py` 无法直接调用它；它改为人工补抓 JS 渲染站点的工具，不进入自动流水线。`media_cn.py` 因此只接能静态取回的中文源，经 `requests` 走本机代理 `127.0.0.1:7890`（可用环境变量 `PHARMA_RADAR_PROXY` 覆盖，设为空串即不走代理，供 GitHub Actions 使用）。
+
+实测可达并在本期接入的三个源：
+
+| 源 | 入口 | 可解析内容 |
+|---|---|---|
+| 生物谷 | `https://news.bioon.com/1.html`（分页最新列表） | 标题、日期 |
+| 药智新闻 | `https://news.yaozh.com/`（首页头条区） | 标题、日期 |
+| 药时代 | `https://www.drugtimes.cn/`（首页） | 标题、URL 内含发布日期 |
+
+初版清单里的医药魔方、界面新闻医药、第一财经医药、36 氪医疗实测均为 JS 渲染或反爬（36 氪 `/feed` 返回反爬页面，多个频道页无文章链接），本期不接；需要时用 pyrecrawl 手动补抓，或改为浏览器渲染后再接入。
 
 ### 付费数据库的边界
 
@@ -190,6 +202,8 @@ GitHub Pages            纯静态 HTML/CSS/JS
 |---|---|---|---|
 | GitHub Actions | UTC 11:00（= CST 19:00） | 英文 RSS、监管公告、公告文件 | 境外 IP 稳定可达 |
 | 本机 launchd | CST 19:00 | 中文媒体源 | 需走 `127.0.0.1:7890`，部分站点境外 IP 受限 |
+
+`media_cn.py` 的代理地址取环境变量 `PHARMA_RADAR_PROXY`，缺省 `http://127.0.0.1:7890`；显式设为空串时不走代理（GitHub Actions 的用法）。单个源取回失败只记日志并跳过，不中止整次运行。
 
 两个 runner 写入同一数据目录，按 `id` 合并。GitHub Actions 的 cron 有分钟级延迟，验收标准按 19:30 计。
 
@@ -235,7 +249,9 @@ GitHub Pages            纯静态 HTML/CSS/JS
 |---|---|---|---|
 | P1 | schema、2 个英文 RSS 源、NMPA/CDE 源、规则打分、配额截断、「今日」页 | 1 天 | 本机跑通一次，页面能看到当日条目 |
 | P2 | ClinicalTrials.gov / openFDA / PubMed 接入、催化剂日历初版 | 0.5 天 | 日历上有真实未来事件 |
-| P3 | 中文媒体源、pyrecrawl 接入、跨源聚类去重 | 0.5 天 | 同一事件多源报道合并为 1 条 |
+| P3 | 中文媒体源（静态可达的三个）、跨源聚类去重 | 0.5 天 | 同一事件多源报道合并为 1 条 |
+
+P3 的 pyrecrawl 接入改为人工补抓工具，不进自动流水线（原因见 §7 的 2026-11-04 决定）。
 | P4 | 认知地图、领域档案 | 0.5 天 | 两屏可访问 |
 | P5 | GitHub Actions 与 launchd 定时、周末覆盖报告、偏科补抓 | 0.5 天 | 连续两天无人干预自动更新 |
 
