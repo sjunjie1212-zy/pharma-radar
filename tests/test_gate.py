@@ -50,9 +50,13 @@ class TestSourcePolicy(unittest.TestCase):
         self.assertTrue(should_gate({"source": "stat"}))
 
     def test_nmpa_news_gated(self):
+        # 断言在名单里，而不只是 should_gate 返回 True：未知源默认也返回 True，
+        # 只测返回值的话，把 nmpa-news 从名单里移出去这个测试仍然通过。
+        self.assertIn("nmpa-news", GATED_SOURCES)
         self.assertTrue(should_gate({"source": "nmpa-news"}))
 
     def test_nature_biotech_gated(self):
+        self.assertIn("nature-biotech", GATED_SOURCES)
         self.assertTrue(should_gate({"source": "nature-biotech"}))
 
     def test_unknown_source_gated(self):
