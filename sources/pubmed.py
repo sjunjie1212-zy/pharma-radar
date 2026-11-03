@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -52,7 +53,7 @@ def parse_summaries(result: dict, fallback_date: str = "") -> list[dict]:
 
 def fetch_all(days: int = LOOKBACK_DAYS, today: date | None = None,
               timeout: int = 30) -> list[dict]:
-    today = today or date.today()
+    today = today or datetime.now(ZoneInfo("Asia/Shanghai")).date()
     start = today - timedelta(days=days)
     search = requests.get(
         f"{BASE}/esearch.fcgi",
@@ -67,7 +68,17 @@ def fetch_all(days: int = LOOKBACK_DAYS, today: date | None = None,
         headers={"User-Agent": "pharma-radar/0.1"},
     )
     search.raise_for_status()
-    ids = (search.json().get("esearchresult") or {}).get("idlist") or []
+    esearch = search.json().get("esearchresult")
+    if not isinstance(esearch, dict):
+        log.warning("pubmed: esearch returned no esearchresult")
+        return []
+    error = esearch.get("ERROR") or esearch.get("error")
+    if error:
+        # NCBI 限流与非法 term 都以 HTTP 200 + esearchresult.error 返回；记日志以免
+        # 与「当天确实没有新指南」混为一谈。
+        log.warning("pubmed: esearch rejected the query: %s", error)
+        return []
+    ids = esearch.get("idlist") or []
     if not ids:
         return []
     summary = requests.get(

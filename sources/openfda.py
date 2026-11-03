@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -41,8 +42,9 @@ def parse_results(results: list[dict]) -> list[dict]:
         latest = max(approved, key=lambda s: s["submission_status_date"])
         product = (record.get("products") or [{}])[0]
         brand = (product.get("brand_name") or "").strip()
-        ingredients = [i.get("name", "").strip()
-                       for i in product.get("active_ingredients") or []]
+        ingredients = [str(i.get("name") or "").strip()
+                       for i in product.get("active_ingredients") or []
+                       if isinstance(i, dict)]
         ingredient = ingredients[0] if ingredients else ""
         label = brand or ingredient
         if not label:
@@ -67,7 +69,7 @@ def parse_results(results: list[dict]) -> list[dict]:
 
 def fetch_all(days: int = LOOKBACK_DAYS, today: date | None = None,
               timeout: int = 30) -> list[dict]:
-    today = today or date.today()
+    today = today or datetime.now(ZoneInfo("Asia/Shanghai")).date()
     start = (today - timedelta(days=days)).strftime("%Y%m%d")
     end = today.strftime("%Y%m%d")
     params = {

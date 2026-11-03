@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -74,7 +75,7 @@ def _base_params() -> dict:
 def fetch_items(days: int = ITEM_DAYS, today: date | None = None,
                 timeout: int = 30) -> list[dict]:
     """近 days 天首次登记的 III 期研究。API 只做倒序取前 100 条，日期在本地筛。"""
-    today = today or date.today()
+    today = today or datetime.now(ZoneInfo("Asia/Shanghai")).date()
     params = dict(_base_params(), sort="StudyFirstPostDate:desc")
     floor = (today - timedelta(days=days)).isoformat()
     out: list[dict] = []
@@ -99,7 +100,7 @@ def fetch_items(days: int = ITEM_DAYS, today: date | None = None,
 def fetch_catalysts(today: date | None = None, days: int = CATALYST_DAYS,
                     timeout: int = 30) -> list[dict]:
     """主要完成日期在未来 days 天内的 III 期研究。"""
-    today = today or date.today()
+    today = today or datetime.now(ZoneInfo("Asia/Shanghai")).date()
     end = today + timedelta(days=days)
     params = dict(
         _base_params(),

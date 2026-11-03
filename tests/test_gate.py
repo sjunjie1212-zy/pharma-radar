@@ -59,6 +59,17 @@ class TestSourcePolicy(unittest.TestCase):
         self.assertIn("nature-biotech", GATED_SOURCES)
         self.assertTrue(should_gate({"source": "nature-biotech"}))
 
+    def test_trials_not_gated(self):
+        # 三个新源若从 TRUSTED_SOURCES 掉出，其条目会落入词表门，无通用信号词
+        # 的稿子被静默丢弃；逐源断言，缺一个就失败。
+        self.assertFalse(should_gate({"source": "trials"}))
+
+    def test_openfda_not_gated(self):
+        self.assertFalse(should_gate({"source": "openfda"}))
+
+    def test_pubmed_not_gated(self):
+        self.assertFalse(should_gate({"source": "pubmed"}))
+
     def test_unknown_source_gated(self):
         self.assertTrue(should_gate({"source": "somewhere-new"}))
 
