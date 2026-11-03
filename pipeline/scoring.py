@@ -55,8 +55,8 @@ def _hit(text: str, words: tuple[str, ...]) -> bool:
     filing 不再命中 profiling）；中文等其它词仍按子串匹配。"""
     for w in words:
         if w == "deal":
-            # deal 太短，左边界不足以挡住 dealer/dealing，要求两侧都是边界。
-            if re.search(r"(?<![a-z0-9])deal(?![a-z0-9])", text):
+            # deal 太短，左边界不足以挡住 dealer/dealing，要求两侧都是边界；deals 复数仍命中。
+            if re.search(r"(?<![a-z0-9])deals?(?![a-z0-9])", text):
                 return True
         elif _ASCII_ALNUM.match(w):
             if re.search(r"(?<![a-z0-9])" + re.escape(w), text):

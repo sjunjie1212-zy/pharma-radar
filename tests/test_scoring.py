@@ -43,6 +43,9 @@ class TestClassifyEvent(unittest.TestCase):
     def test_word_bounded_deal_matches(self):
         self.assertEqual(classify_event("Company announces $2bn deal"), "deal")
 
+    def test_deal_plural_matches(self):
+        self.assertEqual(classify_event("Pfizer signs two deals in oncology"), "deal")
+
 
 class TestDimension(unittest.TestCase):
     def test_guideline_goes_D1(self):
