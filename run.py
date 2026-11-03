@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 from pipeline.build import append_raw, build, load_raw
 from pipeline.dedupe import assign_clusters, dedupe
+from pipeline.gate import filter_relevant
 from pipeline.scoring import enrich
 from pipeline.select import select
 from sources import reg_cn
@@ -35,14 +36,18 @@ def main() -> int:
 
     today = args.date
     fresh = [i for i in collect() if i.get("date") == today]
+    fetched = len(fresh)
     fresh = [enrich(i) for i in fresh]
-    fresh = assign_clusters(dedupe(fresh))
+
+    gated = filter_relevant(fresh)
+    log.info("gate: kept %d of %d", len(gated), len(fresh))
+    fresh = assign_clusters(dedupe(gated))
     chosen = select(fresh)
 
     added = append_raw(chosen, month=today[:7])
     payload = build(load_raw())
     log.info("date=%s fetched=%d selected=%d added=%d days=%d",
-             today, len(fresh), len(chosen), added, len(payload["days"]))
+             today, fetched, len(chosen), added, len(payload["days"]))
     return 0
 
 
