@@ -56,6 +56,29 @@ class TestPageBehaviour(unittest.TestCase):
         js = (ROOT / "app.js").read_text(encoding="utf-8")
         self.assertIn("今日无必看", js)
 
+    def test_html_loads_generated_items_js_before_app_js(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        items_pos = html.find('<script src="./data/items.js"></script>')
+        app_pos = html.find('<script src="./app.js"></script>')
+        self.assertNotEqual(items_pos, -1)
+        self.assertNotEqual(app_pos, -1)
+        self.assertLess(items_pos, app_pos)
+
+    def test_js_allows_only_http_links(self):
+        js = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn('url.protocol === "http:"', js)
+        self.assertIn('url.protocol === "https:"', js)
+        self.assertNotIn('item.url || "#"', js)
+
+    def test_js_skips_non_object_items(self):
+        js = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn('typeof item === "object"', js)
+        self.assertIn("!Array.isArray(item)", js)
+
+    def test_js_has_filtered_must_copy(self):
+        js = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn("本维度今日无必看", js)
+
 
 if __name__ == "__main__":
     unittest.main()
