@@ -28,14 +28,14 @@ def select(items, limit: int = 20, per_dim: int = 5, required=("D1", "D2", "D3",
             continue
         if len(chosen) >= limit:
             evict = min(
-                (c for c in chosen if counts.get(c["dimension"], 0) > 1),
+                (c for c in chosen if counts.get(c.get("dimension", "D6"), 0) > 1),
                 key=_rank_key,
                 default=None,
             )
             if evict is None:
                 continue
             chosen.remove(evict)
-            counts[evict["dimension"]] -= 1
+            counts[evict.get("dimension", "D6")] -= 1
         chosen.append(candidate)
         counts[dim] = counts.get(dim, 0) + 1
 
