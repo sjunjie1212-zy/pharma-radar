@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 from email.utils import parsedate_to_datetime
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from zoneinfo import ZoneInfo
 
 DIMENSIONS = ("D1", "D2", "D3", "D4", "D5", "D6")
 EVENT_TYPES = ("deal", "clinical", "regulatory", "payment", "commercial", "science", "policy")
+CST = ZoneInfo("Asia/Shanghai")
 
 _TRACKING_EXACT = {"spm", "from", "ref", "source_id", "share", "trk"}
 _TRAILING_PUNCT = re.compile(r"[\s。！？!?,，.；;：:]+$")
@@ -43,14 +45,18 @@ def parse_date(text: str) -> str:
     if not text:
         return ""
     try:
-        return parsedate_to_datetime(text).astimezone(timezone.utc).strftime("%Y-%m-%d")
+        dt = parsedate_to_datetime(text)
     except (TypeError, ValueError, IndexError):
-        pass
-    try:
-        cleaned = text.replace("Z", "+00:00")
-        return datetime.fromisoformat(cleaned).strftime("%Y-%m-%d")
-    except ValueError:
-        return ""
+        dt = None
+    if dt is None:
+        try:
+            cleaned = text.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(cleaned)
+        except ValueError:
+            return ""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=CST)
+    return dt.astimezone(CST).strftime("%Y-%m-%d")
 
 
 def make_item(

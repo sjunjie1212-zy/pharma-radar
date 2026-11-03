@@ -32,6 +32,7 @@ class TestMakeItem(unittest.TestCase):
         self.assertEqual(it["dimension"], "D6")
         self.assertEqual(it["m"], 1)
         self.assertEqual(it["company"], [])
+        self.assertEqual(it["date"], "2026-11-03")
 
     def test_id_derived_from_url(self):
         it = make_item(title="t", url="https://a.com/x", source="s", published_at="2026-11-03T10:00:00")
@@ -44,6 +45,12 @@ class TestParseDate(unittest.TestCase):
 
     def test_iso(self):
         self.assertEqual(parse_date("2026-11-03T10:20:00Z"), "2026-11-03")
+
+    def test_rfc822_positive_offset_keeps_local_day(self):
+        self.assertEqual(parse_date("Tue, 03 Nov 2026 07:00:00 +0800"), "2026-11-03")
+
+    def test_iso_negative_offset_crosses_to_next_day(self):
+        self.assertEqual(parse_date("2026-11-03T20:00:00-08:00"), "2026-11-04")
 
     def test_garbage_returns_empty(self):
         self.assertEqual(parse_date("not a date"), "")
