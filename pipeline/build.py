@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from collections import defaultdict
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from pipeline.gate import filter_relevant
 from pipeline.select import select
 
 CST = ZoneInfo("Asia/Shanghai")
+log = logging.getLogger(__name__)
 
 
 def append_raw(items: list[dict], month: str, raw_dir: str = "data/raw") -> int:
@@ -59,8 +62,15 @@ def build(items: list[dict], out_path: str = "data/items.json") -> dict:
 
     days = []
     for date in sorted(by_date, reverse=True):
-        # 渲染时再截断一次：同日重跑会累积 raw，不能让配额在上游被绕过。
-        rows = select(by_date[date])
+        # 渲染时重跑一次主题门：raw 是累积的，早期较松的门或门出现之前的条目
+        # 不能靠 build 再被发出来。
+        day_rows = by_date[date]
+        relevant = filter_relevant(day_rows)
+        if len(relevant) != len(day_rows):
+            log.info("gate: kept %d of %d (build, date=%s)",
+                     len(relevant), len(day_rows), date)
+        # 再截断一次：同日重跑会累积 raw，不能让配额在上游被绕过。
+        rows = select(relevant)
         must = [r["id"] for r in rows if _is_must(r)][:5]
         days.append({"date": date, "must": must, "items": rows})
 
