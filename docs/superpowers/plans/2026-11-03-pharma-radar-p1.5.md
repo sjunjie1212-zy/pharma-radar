@@ -488,6 +488,99 @@ git commit -m "feat: 主题门按源分级并修补词表屈折与交易词"
 
 ---
 
+### Task 4: 事件分类补齐（跑真数据后追加）
+
+**Files:**
+- Modify: `pipeline/scoring.py`
+- Test: `tests/test_scoring.py`
+
+**原因**：P1.5 跑真数据后，今日 4 条全部落 D6/M2，必看区为空。逐条核对，是事件分类漏词：媒体常用「FDA OKs」而非 approve；破产、IPO、生物类似药、关键试验读出这些产业信号不在词表里。这不是门的问题——条目已经进来了，是分类没认出来。
+
+**Interfaces:**
+- Consumes: `classify_event(title) -> str`、`assign_dimension(event_type, title) -> str`、`score_m(event_type, title) -> int`（均已存在，签名不变）
+- Produces: 无新接口，只改关键词常量。
+
+- [ ] **Step 1: 写失败测试**
+
+```python
+# tests/test_scoring.py 追加
+class TestEventKeywordsAdded(unittest.TestCase):
+    def test_fda_oks_is_regulatory(self):
+        title = "STAT+: FDA OKs generic HIV prevention shot, widening access"
+        self.assertEqual(classify_event(title), "regulatory")
+        self.assertEqual(assign_dimension("regulatory", title), "D3")
+        self.assertEqual(score_m("regulatory", title), 3)
+
+    def test_bankruptcy_is_commercial(self):
+        title = "Karyopharm, deep in debt, to sell itself in bankruptcy"
+        self.assertEqual(classify_event(title), "commercial")
+        self.assertEqual(assign_dimension("commercial", title), "D5")
+        self.assertEqual(score_m("commercial", title), 3)
+
+    def test_ipo_is_commercial(self):
+        title = "Aspen raises a $141M IPO in pursuit of a cell therapy"
+        self.assertEqual(classify_event(title), "commercial")
+        self.assertEqual(score_m("commercial", title), 3)
+
+    def test_key_trial_is_clinical(self):
+        title = "Genmab soars to record highs after cancer drug succeeds in key trial"
+        self.assertEqual(classify_event(title), "clinical")
+        self.assertEqual(assign_dimension("clinical", title), "D2")
+
+    def test_pbm_rule_is_policy(self):
+        title = "Labor Department finalizes sweeping PBM disclosure rule"
+        self.assertEqual(classify_event(title), "policy")
+
+    def test_biosimilar_is_commercial(self):
+        title = "Keytruda biosimilars are coming — but they face an uphill battle"
+        self.assertEqual(classify_event(title), "commercial")
+
+    def test_clears_stays_out_of_regulatory(self):
+        # "clears" 在英文里太泛（Boeing clears FAA hurdle、court clears executive），不收。
+        for title in ("Boeing clears FAA hurdle for new jet",
+                      "Court clears former pharma executive"):
+            self.assertNotEqual(classify_event(title), "regulatory")
+```
+
+- [ ] **Step 2: 运行确认失败**
+
+Run: `python3 -m unittest tests.test_scoring -v`
+Expected: 6 个新测试失败（`test_clears_stays_out_of_regulatory` 通过）。
+
+- [ ] **Step 3: 实现**
+
+```python
+# pipeline/scoring.py 追加到对应元组的末尾（不要重排已有顺序）
+# regulatory 追加：
+"fda ok", "fda oks", "fda clearance", "wins fda approval"
+
+# commercial 追加：
+"bankruptcy", "chapter 11", "ipo", "pbm", "cost cut", "cost-cutting", "biosimilar"
+
+# policy 追加：
+"pbm", "disclosure rule"
+
+# clinical 追加：
+"key trial", "succeeds in"
+
+# _M3 追加：
+"bankruptcy", "chapter 11", "ipo"
+```
+
+- [ ] **Step 4: 运行确认通过**
+
+Run: `python3 -m unittest discover -s tests -t . -v`
+Expected: 全部通过。
+
+- [ ] **Step 5: 提交**
+
+```bash
+git add pipeline/scoring.py tests/test_scoring.py
+git commit -m "feat: 事件分类补齐 FDA OKs、破产、IPO、关键试验读出等媒体常用写法"
+```
+
+---
+
 ## 完成标志
 
 - `data/items.json` 中不再出现选举、冥想、民生类条目
