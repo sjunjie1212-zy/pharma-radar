@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from pipeline.build import append_raw, build, load_raw
@@ -11,7 +10,7 @@ from pipeline.dedupe import assign_clusters, dedupe
 from pipeline.gate import filter_relevant
 from pipeline.scoring import enrich
 from pipeline.select import select
-from pipeline.window import in_window, stamp_issue_date
+from pipeline.window import in_window, resolve_anchor, stamp_issue_date
 from sources import reg_cn
 from sources.rss_en import fetch_all
 
@@ -32,20 +31,24 @@ def collect() -> list[dict]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--date", default=datetime.now(CST).strftime("%Y-%m-%d"))
+    parser.add_argument("--date", default=None,
+                        help="期号日期 YYYY-MM-DD，锚定该日 19:00；默认运行时刻")
     args = parser.parse_args()
 
-    now = datetime.now(CST)
-    today = args.date
+    try:
+        anchor = resolve_anchor(args.date)
+    except ValueError as exc:
+        parser.error(str(exc))
+
+    today = anchor.astimezone(CST).strftime("%Y-%m-%d")
 
     collected = [enrich(i) for i in collect()]
     gated = filter_relevant(collected)
     log.info("gate: kept %d of %d", len(gated), len(collected))
 
-    # 本期 = 运行时刻向前 24 小时。19:00 运行即「前一日 19:00 → 当日 19:00」。
-    windowed = [stamp_issue_date(i, now) for i in gated if in_window(i, now)]
-    log.info("window: kept %d of %d (issue=%s)", len(windowed), len(gated),
-             now.astimezone(CST).strftime("%Y-%m-%d"))
+    # 本期 = 锚点向前 24 小时。锚点为 19:00 即「前一日 19:00 → 当日 19:00」。
+    windowed = [stamp_issue_date(i, anchor) for i in gated if in_window(i, anchor)]
+    log.info("window: kept %d of %d (issue=%s)", len(windowed), len(gated), today)
 
     fresh = assign_clusters(dedupe(windowed))
     chosen = select(fresh)

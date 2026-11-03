@@ -1,15 +1,31 @@
 """日报窗口：前一日 19:00 至当日 19:00。
 
-等价于「以运行时刻为终点、向前 24 小时」。19:00 定时运行时与 spec 的 19:00 切点一致；
-提前手动运行则窗口收紧，不会把更早的条目算进本期。
+窗口以「当期锚点」为终点、向前 24 小时。定时运行时锚点就是运行时刻；传入
+``--date`` 时锚点固定为该日 19:00（见 ``resolve_anchor``），因此窗口是严格的
+[date-1 19:00, date 19:00)，与运行时刻无关。
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 
 CST = ZoneInfo("Asia/Shanghai")
+
+
+def resolve_anchor(date_arg: str | None) -> datetime:
+    """把 ``--date`` 参数解析成当期锚点。
+
+    无参数时返回当前北京时间；有参数时返回该日 19:00 北京时间。格式非法抛
+    ValueError，避免把 "x" 之类的值当成月份写进 data/raw/。
+    """
+    if date_arg is None:
+        return datetime.now(CST)
+    try:
+        day = date.fromisoformat(date_arg)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"--date 需要 YYYY-MM-DD 格式，收到 {date_arg!r}") from exc
+    return datetime.combine(day, time(19, 0), tzinfo=CST)
 
 
 def parse_timestamp(text: str) -> datetime | None:

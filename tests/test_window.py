@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from pipeline.window import in_window, parse_timestamp, stamp_issue_date
+from pipeline.window import in_window, parse_timestamp, resolve_anchor, stamp_issue_date
 
 CST = ZoneInfo("Asia/Shanghai")
 
@@ -70,6 +70,44 @@ class TestStampIssueDate(unittest.TestCase):
         stamped = stamp_issue_date(original, now)
         self.assertIsNot(stamped, original)
         self.assertEqual(original["date"], "2026-11-02")
+
+
+class TestResolveAnchor(unittest.TestCase):
+    def test_date_arg_anchors_at_1900_cst(self):
+        anchor = resolve_anchor("2026-10-31")
+        self.assertEqual(anchor.utcoffset(), timedelta(hours=8))
+        self.assertEqual(anchor.strftime("%Y-%m-%d %H:%M"), "2026-10-31 19:00")
+
+    def test_none_returns_current_cst_time(self):
+        before = datetime.now(CST)
+        anchor = resolve_anchor(None)
+        after = datetime.now(CST)
+        self.assertEqual(anchor.utcoffset(), timedelta(hours=8))
+        self.assertGreaterEqual(anchor, before)
+        self.assertLessEqual(anchor, after)
+
+    def test_malformed_raises(self):
+        with self.assertRaises(ValueError):
+            resolve_anchor("x")
+
+
+class TestAnchoredWindow(unittest.TestCase):
+    """--date 定锚后窗口是 [date-1 19:00, date 19:00)，不是运行时刻向前 24h。"""
+
+    anchor = resolve_anchor("2026-10-31")
+
+    def test_before_previous_cutoff_excluded(self):
+        self.assertFalse(in_window(item("2026-10-30T18:59:00+08:00"), self.anchor))
+
+    def test_after_previous_cutoff_included(self):
+        self.assertTrue(in_window(item("2026-10-30T19:30:00+08:00"), self.anchor))
+
+    def test_before_issue_cutoff_included(self):
+        self.assertTrue(in_window(item("2026-10-31T18:59:00+08:00"), self.anchor))
+
+    def test_issue_date_matches_anchor_date(self):
+        stamped = stamp_issue_date(item("2026-10-30T23:00:00+08:00"), self.anchor)
+        self.assertEqual(stamped["date"], "2026-10-31")
 
 
 class TestDateFallbackAtDifferentRunTimes(unittest.TestCase):
