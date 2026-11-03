@@ -47,15 +47,10 @@ def _same_event(a: str, b: str, threshold: float, jaccard_threshold: float) -> b
         return False
     if SequenceMatcher(None, a, b).ratio() >= threshold:
         return True
-    # 标题过短时二元组太稀（如「事件甲」只有 2 个），Jaccard 会失真，
-    # 退化为字符集合比较；正常长度仍用二元组。
-    if len(a) <= 3 or len(b) <= 3:
-        ta, tb = set(a), set(b)
-    else:
-        ta, tb = _bigrams(a), _bigrams(b)
-    if not ta or not tb:
+    ba, bb = _bigrams(a), _bigrams(b)
+    if not ba or not bb:
         return False
-    return len(ta & tb) / len(ta | tb) >= jaccard_threshold
+    return len(ba & bb) / len(ba | bb) >= jaccard_threshold
 
 
 def assign_clusters(items: list[dict], threshold: float = 0.85,

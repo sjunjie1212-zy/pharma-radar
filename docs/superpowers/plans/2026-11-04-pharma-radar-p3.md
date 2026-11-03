@@ -519,14 +519,16 @@ class TestCollapse(unittest.TestCase):
                 "published_at": "2026-11-03T08:00:00+08:00"}
 
     def test_same_cluster_keeps_highest_m(self):
-        items = [self._item("a", "事件甲", 2), self._item("b", "事件乙", 4)]
+        items = [self._item("a", "特宝生物10mg获批，长效生长激素的规格竞争", 2),
+                 self._item("b", "特宝生物长效生长激素10mg规格获批", 4)]
         items = assign_clusters(items)
         self.assertEqual(items[0]["cluster_id"], items[1]["cluster_id"])
         out = collapse_clusters(items)
         self.assertEqual([i["id"] for i in out], ["b"])
 
     def test_tie_breaks_on_source_weight(self):
-        items = [self._item("a", "事件甲", 3, 1.0), self._item("b", "事件乙", 3, 1.4)]
+        items = [self._item("a", "特宝生物10mg获批，长效生长激素的规格竞争", 3, 1.0),
+                 self._item("b", "特宝生物长效生长激素10mg规格获批", 3, 1.4)]
         items = assign_clusters(items)
         out = collapse_clusters(items)
         self.assertEqual([i["id"] for i in out], ["b"])
