@@ -49,11 +49,17 @@ class TestSourcePolicy(unittest.TestCase):
     def test_broad_source_gated(self):
         self.assertTrue(should_gate({"source": "stat"}))
 
+    def test_nmpa_news_gated(self):
+        self.assertTrue(should_gate({"source": "nmpa-news"}))
+
+    def test_nature_biotech_gated(self):
+        self.assertTrue(should_gate({"source": "nature-biotech"}))
+
     def test_unknown_source_gated(self):
         self.assertTrue(should_gate({"source": "somewhere-new"}))
 
     def test_ungated_source_keeps_unmatched_title(self):
-        items = [{"source": "biopharmadive", "title": "Karyopharm, deep in debt, to sell itself in bankruptcy"}]
+        items = [{"source": "biopharmadive", "title": "This week in charts"}]
         self.assertEqual(len(filter_relevant(items)), 1)
 
     def test_gated_source_still_drops(self):
@@ -68,8 +74,9 @@ class TestInflections(unittest.TestCase):
     def test_antibodies(self):
         self.assertTrue(is_relevant({"title": "New monoclonal antibodies advance"}))
 
-    def test_approves(self):
-        self.assertTrue(is_relevant({"title": "Regulator approves new plant"}))
+    def test_acquires_inflection(self):
+        # 只有 "acquire" 的屈折后缀能命中这里，无其它词干/术语可借。
+        self.assertTrue(is_relevant({"title": "Company acquires rival"}))
 
     def test_aromatherapy_still_rejected(self):
         self.assertFalse(is_relevant({"title": "Aromatherapy oils for sale"}))
@@ -78,8 +85,25 @@ class TestInflections(unittest.TestCase):
         self.assertTrue(is_relevant({"title": "Pfizer acquires Seagen in $43 billion deal"}))
         self.assertTrue(is_relevant({"title": "Company files for Chapter 11"}))
 
+    def test_karyopharm_bankruptcy_term(self):
+        self.assertTrue(is_relevant({"title": "Karyopharm, deep in debt, to sell itself in bankruptcy"}))
+
+    def test_chemotherapy(self):
+        self.assertTrue(is_relevant({"title": "Chemotherapy shows promise"}))
+
     def test_pd1_token(self):
         self.assertTrue(is_relevant({"title": "PD-1 inhibitor shows new data"}))
+
+
+class TestPrecisionTerms(unittest.TestCase):
+    def test_generic_topics_stay_relevant_via_pharma_words(self):
+        self.assertTrue(is_relevant({"title": "Medicare drug pricing"}))
+        self.assertTrue(is_relevant({"title": "Insurers' coverage of gene therapy"}))
+        self.assertTrue(is_relevant({"title": "Biotech IPO market cools"}))
+
+    def test_generic_news_terms_alone_not_relevant(self):
+        self.assertFalse(is_relevant({"title": "Opinion: What the election coverage got wrong"}))
+        self.assertFalse(is_relevant({"title": "Tesla valuation hits record"}))
 
 
 if __name__ == "__main__":
