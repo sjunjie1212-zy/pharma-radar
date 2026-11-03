@@ -148,6 +148,38 @@ class TestEventKeywordsAdded(unittest.TestCase):
         title = "Keytruda biosimilars are coming — but they face an uphill battle"
         self.assertEqual(classify_event(title), "commercial")
 
+    def test_succeeds_in_alone_is_not_clinical(self):
+        # "succeeds in" 太泛：专利纠纷、IPO 都可能这么写，不能进 clinical。
+        title = "Amgen succeeds in patent dispute with Sanofi"
+        self.assertNotEqual(classify_event(title), "clinical")
+
+    def test_pbm_alone_is_policy(self):
+        # 只靠 "pbm" 命中，不借助 "disclosure rule"，守住 pbm 不重复进 commercial。
+        title = "PBM reform advances in Congress"
+        self.assertEqual(classify_event(title), "policy")
+
+    def test_pbm_not_duplicated_in_commercial(self):
+        # 行为测试无法区分「只在 policy」与「两边都有」（policy 元组优先），
+        # 这里直接守住表结构：pbm 不能重新出现在 commercial。
+        from pipeline.scoring import _EVENT_KEYWORDS
+
+        by_event = dict(_EVENT_KEYWORDS)
+        self.assertIn("pbm", by_event["policy"])
+        self.assertNotIn("pbm", by_event["commercial"])
+
+    def test_fda_clearance_is_regulatory(self):
+        title = "Gilead wins FDA clearance for once-daily pill"
+        self.assertEqual(classify_event(title), "regulatory")
+
+    def test_chapter_11_is_commercial(self):
+        title = "Company files for Chapter 11 protection"
+        self.assertEqual(classify_event(title), "commercial")
+        self.assertEqual(score_m("commercial", title), 3)
+
+    def test_cost_cut_is_commercial(self):
+        title = "AstraZeneca unveils cost cuts"
+        self.assertEqual(classify_event(title), "commercial")
+
     def test_clears_stays_out_of_regulatory(self):
         # "clears" 在英文里太泛（Boeing clears FAA hurdle、court clears executive），不收。
         for title in ("Boeing clears FAA hurdle for new jet",
