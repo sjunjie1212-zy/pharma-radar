@@ -1,6 +1,6 @@
 import unittest
 
-from pipeline.gate import filter_relevant, is_relevant
+from pipeline.gate import GATED_SOURCES, filter_relevant, is_relevant, should_gate
 
 
 def item(title, title_zh=""):
@@ -40,6 +40,46 @@ class TestIsRelevant(unittest.TestCase):
         items = [item("electoral map"), item("FDA approves drug"), item("FDA rejects drug")]
         kept = filter_relevant(items)
         self.assertEqual([i["title"] for i in kept], ["FDA approves drug", "FDA rejects drug"])
+
+
+class TestSourcePolicy(unittest.TestCase):
+    def test_dedicated_pharma_source_not_gated(self):
+        self.assertFalse(should_gate({"source": "biopharmadive"}))
+
+    def test_broad_source_gated(self):
+        self.assertTrue(should_gate({"source": "stat"}))
+
+    def test_unknown_source_gated(self):
+        self.assertTrue(should_gate({"source": "somewhere-new"}))
+
+    def test_ungated_source_keeps_unmatched_title(self):
+        items = [{"source": "biopharmadive", "title": "Karyopharm, deep in debt, to sell itself in bankruptcy"}]
+        self.assertEqual(len(filter_relevant(items)), 1)
+
+    def test_gated_source_still_drops(self):
+        items = [{"source": "stat", "title": "Opinion: how meditation helped me"}]
+        self.assertEqual(filter_relevant(items), [])
+
+
+class TestInflections(unittest.TestCase):
+    def test_immunotherapy(self):
+        self.assertTrue(is_relevant({"title": "Immunotherapy shows promise in melanoma"}))
+
+    def test_antibodies(self):
+        self.assertTrue(is_relevant({"title": "New monoclonal antibodies advance"}))
+
+    def test_approves(self):
+        self.assertTrue(is_relevant({"title": "Regulator approves new plant"}))
+
+    def test_aromatherapy_still_rejected(self):
+        self.assertFalse(is_relevant({"title": "Aromatherapy oils for sale"}))
+
+    def test_deal_terms(self):
+        self.assertTrue(is_relevant({"title": "Pfizer acquires Seagen in $43 billion deal"}))
+        self.assertTrue(is_relevant({"title": "Company files for Chapter 11"}))
+
+    def test_pd1_token(self):
+        self.assertTrue(is_relevant({"title": "PD-1 inhibitor shows new data"}))
 
 
 if __name__ == "__main__":
