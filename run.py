@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 
 from pipeline import catalysts
 from pipeline.build import append_raw, build, load_raw
-from pipeline.dedupe import assign_clusters, dedupe
+from pipeline.dedupe import assign_clusters, collapse_clusters, dedupe
 from pipeline.gate import filter_relevant
 from pipeline.scoring import enrich
 from pipeline.select import select
@@ -72,8 +72,11 @@ def main() -> int:
     windowed = [stamp_issue_date(i, anchor) for i in gated if in_window(i, anchor)]
     log.info("window: kept %d of %d (issue=%s)", len(windowed), len(gated), today)
 
-    fresh = assign_clusters(dedupe(windowed))
-    chosen = select(fresh)
+    fresh = collapse_clusters(assign_clusters(dedupe(windowed)))
+    known = {i["id"] for i in load_raw()}
+    pending = [i for i in fresh if i["id"] not in known]
+    chosen = select(pending)
+    log.info("pending: %d of %d after known-id filter", len(pending), len(fresh))
 
     added = append_raw(chosen, month=today[:7])
     payload = build(load_raw())
