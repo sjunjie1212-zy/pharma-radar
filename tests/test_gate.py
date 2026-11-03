@@ -1,6 +1,7 @@
 import unittest
 
-from pipeline.gate import GATED_SOURCES, filter_relevant, is_relevant, should_gate
+from pipeline.gate import (GATED_SOURCES, TRUSTED_SOURCES, filter_relevant,
+                           is_relevant, should_gate)
 
 
 def item(title, title_zh=""):
@@ -119,6 +120,25 @@ class TestPrecisionTerms(unittest.TestCase):
     def test_generic_news_terms_alone_not_relevant(self):
         self.assertFalse(is_relevant({"title": "Opinion: What the election coverage got wrong"}))
         self.assertFalse(is_relevant({"title": "Tesla valuation hits record"}))
+
+
+class TestChineseMediaTrusted(unittest.TestCase):
+    def test_bioon_trusted(self):
+        self.assertIn("bioon", TRUSTED_SOURCES)
+        self.assertFalse(should_gate({"source": "bioon"}))
+
+    def test_yaozh_trusted(self):
+        self.assertIn("yaozh", TRUSTED_SOURCES)
+        self.assertFalse(should_gate({"source": "yaozh"}))
+
+    def test_drugtimes_trusted(self):
+        self.assertIn("drugtimes", TRUSTED_SOURCES)
+        self.assertFalse(should_gate({"source": "drugtimes"}))
+
+    def test_non_pharma_media_still_gated(self):
+        # 36氪、界面这类综合媒体必须逐条过词表，不能因为中文媒体接入而整源放行。
+        self.assertTrue(should_gate({"source": "36kr"}))
+        self.assertTrue(should_gate({"source": "jiemian"}))
 
 
 if __name__ == "__main__":

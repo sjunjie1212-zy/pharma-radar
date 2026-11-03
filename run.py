@@ -13,7 +13,7 @@ from pipeline.gate import filter_relevant
 from pipeline.scoring import enrich
 from pipeline.select import select
 from pipeline.window import in_window, resolve_anchor, stamp_issue_date
-from sources import openfda, pubmed, reg_cn, trials
+from sources import media_cn, openfda, pubmed, reg_cn, trials
 from sources.rss_en import fetch_all as fetch_rss
 
 CST = ZoneInfo("Asia/Shanghai")
@@ -24,7 +24,7 @@ log = logging.getLogger("run")
 def collect() -> list[dict]:
     items: list[dict] = []
     for fn in (fetch_rss, reg_cn.fetch_all, trials.fetch_all,
-               openfda.fetch_all, pubmed.fetch_all):
+               openfda.fetch_all, pubmed.fetch_all, media_cn.fetch_all):
         try:
             items.extend(fn())
         except Exception as exc:  # 单源失败不影响整体
