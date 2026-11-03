@@ -1,5 +1,5 @@
 window.__ITEMS__ = {
- "generated_at": "2026-11-03T18:35:49+08:00",
+ "generated_at": "2026-11-03T19:04:53+08:00",
  "days": [
   {
    "date": "2026-11-03",
@@ -20,7 +20,7 @@ window.__ITEMS__ = {
      "target": [],
      "ta": [],
      "event_type": "science",
-     "dimension": "D1",
+     "dimension": "D6",
      "m": 2,
      "why": "",
      "cluster_id": "253e241f91667d92"
@@ -40,7 +40,7 @@ window.__ITEMS__ = {
      "target": [],
      "ta": [],
      "event_type": "science",
-     "dimension": "D1",
+     "dimension": "D6",
      "m": 2,
      "why": "",
      "cluster_id": "b76b14cb67918191"
@@ -60,7 +60,7 @@ window.__ITEMS__ = {
      "target": [],
      "ta": [],
      "event_type": "science",
-     "dimension": "D1",
+     "dimension": "D6",
      "m": 2,
      "why": "",
      "cluster_id": "81e8f39b40e6d5ef"
@@ -80,7 +80,7 @@ window.__ITEMS__ = {
      "target": [],
      "ta": [],
      "event_type": "science",
-     "dimension": "D1",
+     "dimension": "D6",
      "m": 2,
      "why": "",
      "cluster_id": "7ece3982c7f4e186"
@@ -100,7 +100,7 @@ window.__ITEMS__ = {
      "target": [],
      "ta": [],
      "event_type": "science",
-     "dimension": "D1",
+     "dimension": "D6",
      "m": 2,
      "why": "",
      "cluster_id": "24c742c2821531b5"
