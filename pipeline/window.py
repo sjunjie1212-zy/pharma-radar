@@ -49,7 +49,8 @@ def parse_timestamp(text: str) -> datetime | None:
 def in_window(item: dict, now: datetime) -> bool:
     ts = parse_timestamp(item.get("published_at", ""))
     if ts is None:
-        # 时间戳缺失或解析失败时，退回到「date == 运行日（北京时间）」，与运行时刻无关。
+        # 时间戳缺失或解析失败时，退回到「date == 本期日期（北京时间）」。
+        # 平时本期日期就是运行日；`--date` 补跑时是补跑的那一期，与运行时刻无关。
         return item.get("date", "") == now.astimezone(CST).strftime("%Y-%m-%d")
     start = now - timedelta(hours=24)
     # 左边界取开区间：恰好 24 小时前发布的条目属于上一期（见 test_exactly_24h_old_excluded）。
