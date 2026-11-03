@@ -48,6 +48,12 @@ class TestMergePrune(unittest.TestCase):
         ids = [c["date"] for c in prune(rows, "2026-11-03")]
         self.assertEqual(ids, ["2026-11-03"])
 
+    def test_prune_drops_compact_date(self):
+        # 3.11+ 的 fromisoformat 接受 "20261103"，但它不能参与字符串比较。
+        rows = [cat(date="20261103"), cat(date="2026-11-03")]
+        ids = [c["date"] for c in prune(rows, "2026-11-03")]
+        self.assertEqual(ids, ["2026-11-03"])
+
 
 class TestWriteLoad(unittest.TestCase):
     def test_roundtrip_sorted_and_js_parity(self):
@@ -66,6 +72,13 @@ class TestWriteLoad(unittest.TestCase):
     def test_load_missing_file_returns_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(load(os.path.join(tmp, "nope.json")), [])
+
+    def test_load_corrupt_file_returns_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "bad.json")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write("{not json")
+            self.assertEqual(load(path), [])
 
 
 if __name__ == "__main__":
