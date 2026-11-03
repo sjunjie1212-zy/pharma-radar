@@ -372,6 +372,122 @@ git commit -m "feat: 日报窗口改为前一日 19:00 至当日 19:00"
 
 ---
 
+### Task 3: 分源门与词表修补（Task 1 审查后追加）
+
+**Files:**
+- Modify: `pipeline/gate.py`
+- Test: `tests/test_gate.py`
+
+**Interfaces:**
+- Produces: `GATED_SOURCES: tuple[str, ...]`、`should_gate(item: dict, gated_sources=GATED_SOURCES) -> bool`；`filter_relevant(items, gated_sources=GATED_SOURCES)` 签名向后兼容
+
+**原因**：词表对任何标题一律生效，会误杀专业源里的正常产业新闻（BioPharmaDive 的「Karyopharm, deep in debt, to sell itself in bankruptcy」），也会因英语屈折变化漏掉「immunotherapy」「antibodies」「approvals」。同时 STAT 这类综合源里的非医药稿必须继续拦。
+
+- [ ] **Step 1: 写失败测试**
+
+```python
+# tests/test_gate.py 追加
+from pipeline.gate import GATED_SOURCES, filter_relevant, is_relevant, should_gate
+
+
+class TestSourcePolicy(unittest.TestCase):
+    def test_dedicated_pharma_source_not_gated(self):
+        self.assertFalse(should_gate({"source": "biopharmadive"}))
+
+    def test_broad_source_gated(self):
+        self.assertTrue(should_gate({"source": "stat"}))
+
+    def test_unknown_source_gated(self):
+        self.assertTrue(should_gate({"source": "somewhere-new"}))
+
+    def test_ungated_source_keeps_unmatched_title(self):
+        items = [{"source": "biopharmadive", "title": "Karyopharm, deep in debt, to sell itself in bankruptcy"}]
+        self.assertEqual(len(filter_relevant(items)), 1)
+
+    def test_gated_source_still_drops(self):
+        items = [{"source": "stat", "title": "Opinion: how meditation helped me"}]
+        self.assertEqual(filter_relevant(items), [])
+
+
+class TestInflections(unittest.TestCase):
+    def test_immunotherapy(self):
+        self.assertTrue(is_relevant({"title": "Immunotherapy shows promise in melanoma"}))
+
+    def test_antibodies(self):
+        self.assertTrue(is_relevant({"title": "New monoclonal antibodies advance"}))
+
+    def test_approves(self):
+        self.assertTrue(is_relevant({"title": "Regulator approves new plant"}))
+
+    def test_aromatherapy_still_rejected(self):
+        self.assertFalse(is_relevant({"title": "Aromatherapy oils for sale"}))
+
+    def test_deal_terms(self):
+        self.assertTrue(is_relevant({"title": "Pfizer acquires Seagen in $43 billion deal"}))
+        self.assertTrue(is_relevant({"title": "Company files for Chapter 11"}))
+
+    def test_pd1_token(self):
+        self.assertTrue(is_relevant({"title": "PD-1 inhibitor shows new data"}))
+```
+
+- [ ] **Step 2: 运行确认失败**
+
+Run: `python3 -m unittest tests.test_gate -v`
+Expected: `ImportError: cannot import name 'should_gate'`（或同等失败）
+
+- [ ] **Step 3: 实现**
+
+```python
+# pipeline/gate.py 追加/替换相应部分
+
+# 只拦综合源；专业医药源整源可信，不受词表约束
+GATED_SOURCES: tuple[str, ...] = ("stat", "nmpa-news", "nature-biotech")
+
+# 前缀匹配（左边界，无右边界）：覆盖 therapy/therapies/immunotherapy/chemotherapy 等
+STEMS: tuple[str, ...] = (
+    "therap", "vaccin", "antibod", "biosimilar", "oncolog", "pharmac",
+    "biotech", "biolog", "clinic", "trial", "regulat", "approv",
+)
+
+
+def _stem_hit(text: str, stem: str) -> bool:
+    return re.search(r"(?<![a-z0-9])" + re.escape(stem), text) is not None
+
+
+def should_gate(item: dict, gated_sources: tuple[str, ...] = GATED_SOURCES) -> bool:
+    return item.get("source", "") in gated_sources
+
+
+def is_relevant(item: dict) -> bool:
+    text = f"{item.get('title', '')} {item.get('title_zh', '')}".lower()
+    return any(_hit(text, term) for term in TERMS) or any(_stem_hit(text, stem) for stem in STEMS)
+
+
+def filter_relevant(items: list[dict], gated_sources: tuple[str, ...] = GATED_SOURCES) -> list[dict]:
+    return [i for i in items if not should_gate(i, gated_sources) or is_relevant(i)]
+```
+
+`TERMS` 追加：`"pd-1"`, `"pd-l1"`, `"ctla-4"`, `"acquire"`, `"acquisition"`, `"merger"`, `"buyout"`, `"bankruptcy"`, `"chapter 11"`, `"layoff"`, `"restructur"`, `"ipo"`, `"valuation"`, `"financing"`, `"pricing"`, `"coverage"`。
+
+- [ ] **Step 4: 运行确认通过**
+
+Run: `python3 -m unittest tests.test_gate -v`
+Expected: 原有 10 + 新增 12 全过
+
+- [ ] **Step 5: 全量测试**
+
+Run: `python3 -m unittest discover -s tests -t . -v`
+Expected: 全部通过
+
+- [ ] **Step 6: 提交**
+
+```bash
+git add pipeline/gate.py tests/test_gate.py
+git commit -m "feat: 主题门按源分级并修补词表屈折与交易词"
+```
+
+---
+
 ## 完成标志
 
 - `data/items.json` 中不再出现选举、冥想、民生类条目
