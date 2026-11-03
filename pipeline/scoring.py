@@ -14,7 +14,8 @@ _EVENT_KEYWORDS: list[tuple[str, tuple[str, ...]]] = [
                     "approval", "approved", "approves", "filing", "complete response letter",
                     "regulatory approval")),
     ("clinical", ("iii期", "3期", "临床", "读出", "主要终点", "达到终点", "未达到",
-                  "试验终止", "研究中止", "提前终止", "暂停", "头对头", "phase 3", "phase iii",
+                  "试验终止", "研究中止", "提前终止", "终止试验", "终止临床", "终止 iii",
+                  "暂停", "头对头", "phase 3", "phase iii",
                   "topline", "primary endpoint", "readout", "halted", "discontinued")),
     ("policy", ("指导原则", "法规", "合规", "备案", "新规", "监管新规", "guidance", "policy",
                 "regulation")),
@@ -53,7 +54,11 @@ def _hit(text: str, words: tuple[str, ...]) -> bool:
     """命中关键词。纯 ASCII 字母/数字词要求左词边界（license 可命中 licenses，
     filing 不再命中 profiling）；中文等其它词仍按子串匹配。"""
     for w in words:
-        if _ASCII_ALNUM.match(w):
+        if w == "deal":
+            # deal 太短，左边界不足以挡住 dealer/dealing，要求两侧都是边界。
+            if re.search(r"(?<![a-z0-9])deal(?![a-z0-9])", text):
+                return True
+        elif _ASCII_ALNUM.match(w):
             if re.search(r"(?<![a-z0-9])" + re.escape(w), text):
                 return True
         elif w in text:

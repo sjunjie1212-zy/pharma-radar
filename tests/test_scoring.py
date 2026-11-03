@@ -34,6 +34,15 @@ class TestClassifyEvent(unittest.TestCase):
     def test_recombinant_protein_is_not_commercial(self):
         self.assertNotEqual(classify_event("重组蛋白疫苗机制研究"), "commercial")
 
+    def test_trial_termination_is_clinical(self):
+        self.assertEqual(classify_event("公司决定终止 III 期试验"), "clinical")
+
+    def test_dealer_is_not_deal(self):
+        self.assertNotEqual(classify_event("dealer network expansion"), "deal")
+
+    def test_word_bounded_deal_matches(self):
+        self.assertEqual(classify_event("Company announces $2bn deal"), "deal")
+
 
 class TestDimension(unittest.TestCase):
     def test_guideline_goes_D1(self):
@@ -50,6 +59,9 @@ class TestDimension(unittest.TestCase):
 
     def test_policy_goes_D6(self):
         self.assertEqual(assign_dimension("policy", "医药代表备案新规"), "D6")
+
+    def test_non_guideline_treatment_landscape_is_not_D1(self):
+        self.assertEqual(assign_dimension("regulatory", "治疗格局变化"), "D3")
 
 
 class TestScoreM(unittest.TestCase):
