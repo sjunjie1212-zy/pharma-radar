@@ -68,6 +68,10 @@ body {
   scrollbar-width: none;
 }
 
+.tabs[hidden] {
+  display: none;
+}
+
 .tabs::-webkit-scrollbar {
   display: none;
 }

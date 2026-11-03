@@ -106,6 +106,10 @@ class TestPageBehaviour(unittest.TestCase):
         for marker in (".view-tab", ".catalyst-row", ".kind-badge"):
             self.assertIn(marker, css)
 
+    def test_css_hides_tabs_when_hidden(self):
+        css = (ROOT / "style.css").read_text(encoding="utf-8")
+        self.assertIn(".tabs[hidden]", css)
+
 
 if __name__ == "__main__":
     unittest.main()
