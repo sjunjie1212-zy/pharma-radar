@@ -72,5 +72,50 @@ class TestStampIssueDate(unittest.TestCase):
         self.assertEqual(original["date"], "2026-11-02")
 
 
+class TestDateFallbackAtDifferentRunTimes(unittest.TestCase):
+    """无时间戳时按「date == 运行日（北京时间）」判断，与运行时刻无关。"""
+
+    def test_pre_noon_run_today_date_included(self):
+        now = datetime(2026, 11, 3, 10, 0, tzinfo=CST)
+        self.assertTrue(in_window(item("", "2026-11-03"), now))
+
+    def test_pre_noon_run_yesterday_date_excluded(self):
+        now = datetime(2026, 11, 3, 10, 0, tzinfo=CST)
+        self.assertFalse(in_window(item("", "2026-11-02"), now))
+
+    def test_early_morning_run_today_date_included(self):
+        now = datetime(2026, 11, 3, 1, 0, tzinfo=CST)
+        self.assertTrue(in_window(item("", "2026-11-03"), now))
+
+    def test_early_morning_run_yesterday_date_excluded(self):
+        now = datetime(2026, 11, 3, 1, 0, tzinfo=CST)
+        self.assertFalse(in_window(item("", "2026-11-02"), now))
+
+    def test_unparseable_timestamp_uses_date(self):
+        now = datetime(2026, 11, 3, 10, 0, tzinfo=CST)
+        self.assertTrue(in_window(item("garbage", "2026-11-03"), now))
+        self.assertFalse(in_window(item("garbage", "2026-11-02"), now))
+
+
+class TestUtcOffsets(unittest.TestCase):
+    """UTC 时间先换算到北京时间再比较。"""
+
+    now = datetime(2026, 11, 3, 19, 0, tzinfo=CST)
+
+    def test_rfc2822_utc_converted_to_cst(self):
+        # 10:00 UTC = 18:00 CST，在本期窗口内
+        self.assertTrue(in_window(item("Tue, 03 Nov 2026 10:00:00 +0000"), self.now))
+        # 16:00 UTC = 次日 00:00 CST，晚于运行时刻；若按 UTC 字面比较会误判为入选
+        self.assertFalse(in_window(item("Tue, 03 Nov 2026 16:00:00 +0000"), self.now))
+
+    def test_iso_z_converted_to_cst(self):
+        self.assertTrue(in_window(item("2026-11-03T10:00:00Z"), self.now))
+        self.assertFalse(in_window(item("2026-11-03T16:00:00Z"), self.now))
+
+    def test_local_date_differs_from_utc_date(self):
+        ts = parse_timestamp("2026-11-03T16:00:00Z")
+        self.assertEqual(ts.astimezone(CST).strftime("%Y-%m-%d %H:%M"), "2026-11-04 00:00")
+
+
 if __name__ == "__main__":
     unittest.main()

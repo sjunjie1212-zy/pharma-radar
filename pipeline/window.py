@@ -30,23 +30,11 @@ def parse_timestamp(text: str) -> datetime | None:
     return ts
 
 
-def _item_timestamp(item: dict, now: datetime) -> datetime | None:
-    ts = parse_timestamp(item.get("published_at", ""))
-    if ts is not None:
-        return ts
-    date_text = item.get("date", "")
-    if not date_text:
-        return None
-    try:
-        return datetime.fromisoformat(date_text).replace(hour=12, tzinfo=CST)
-    except ValueError:
-        return None
-
-
 def in_window(item: dict, now: datetime) -> bool:
-    ts = _item_timestamp(item, now)
+    ts = parse_timestamp(item.get("published_at", ""))
     if ts is None:
-        return False
+        # 时间戳缺失或解析失败时，退回到「date == 运行日（北京时间）」，与运行时刻无关。
+        return item.get("date", "") == now.astimezone(CST).strftime("%Y-%m-%d")
     start = now - timedelta(hours=24)
     # 左边界取开区间：恰好 24 小时前发布的条目属于上一期（见 test_exactly_24h_old_excluded）。
     return start < ts < now
