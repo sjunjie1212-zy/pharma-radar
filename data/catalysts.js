@@ -1,15 +1,6 @@
 window.__CATALYSTS__ = {
- "generated_at": "2026-11-03T21:44:07+08:00",
+ "generated_at": "2026-11-04T08:04:31+08:00",
  "catalysts": [
-  {
-   "id": "7d39bd9504dc797b",
-   "date": "2026-11-03",
-   "kind": "读出",
-   "entity": "Novartis Pharmaceuticals",
-   "drug": "LOU064 (blinded)",
-   "note": "Chronic Spontaneous Urticaria（NCT05677451）",
-   "source": "clinicaltrials.gov"
-  },
   {
    "id": "4acb3d593c3c5d81",
    "date": "2026-11-04",
