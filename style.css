@@ -273,11 +273,16 @@ body {
   font-size: 1.12rem;
 }
 
-.card-orig {
-  margin: 0 0 0.2rem;
+.card-link {
+  margin-left: 0.25rem;
   color: var(--muted);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  text-decoration: none;
+  font-weight: 400;
+}
+
+.card-link:hover,
+.card-link:focus-visible {
+  color: var(--fg);
 }
 
 .card-why {

@@ -110,6 +110,16 @@ class TestPageBehaviour(unittest.TestCase):
         css = (ROOT / "style.css").read_text(encoding="utf-8")
         self.assertIn(".tabs[hidden]", css)
 
+    def test_card_links_only_via_arrow(self):
+        js = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn("card-link", js)
+        self.assertIn('"→"', js)
+        self.assertNotIn("card-orig", js)
+
+    def test_css_has_card_link_style(self):
+        css = (ROOT / "style.css").read_text(encoding="utf-8")
+        self.assertIn(".card-link", css)
+
 
 if __name__ == "__main__":
     unittest.main()

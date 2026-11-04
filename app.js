@@ -107,14 +107,7 @@ function mBadge(value) {
 function card(item, isMust) {
   const dim = normalizeDimension(item.dimension);
   const url = safeUrl(item.url);
-  const node = el(url ? "a" : "div", "card dim-" + dim.toLowerCase() + (isMust ? " card-must" : ""));
-  if (url) {
-    node.href = url;
-    node.target = "_blank";
-    node.rel = "noopener";
-  } else {
-    node.classList.add("card-nolink");
-  }
+  const node = el("div", "card dim-" + dim.toLowerCase() + (isMust ? " card-must" : ""));
 
   const head = el("div", "card-head");
   head.appendChild(el("span", "dim-badge", dim));
@@ -124,11 +117,19 @@ function card(item, isMust) {
   node.appendChild(head);
 
   const titleZh = trim(item.title_zh);
-  const title = titleZh || trim(item.title) || "(无标题)";
-  node.appendChild(el("h3", "card-title", title));
-  if (titleZh && trim(item.title) && item.title !== titleZh) {
-    node.appendChild(el("p", "card-orig", item.title));
+  const origTitle = trim(item.title);
+  const title = titleZh || origTitle || "(无标题)";
+  const titleNode = el("h3", "card-title", title);
+  titleNode.title = origTitle || title;
+  if (url) {
+    const link = el("a", "card-link", "→");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.setAttribute("aria-label", "打开原文：" + (trim(item.title) || title));
+    titleNode.appendChild(link);
   }
+  node.appendChild(titleNode);
   if (trim(item.why)) node.appendChild(el("p", "card-why", item.why));
   return node;
 }
