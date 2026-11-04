@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from pipeline import catalysts
+from pipeline import catalysts, summarize
 from pipeline.build import append_raw, build, load_raw
 from pipeline.dedupe import assign_clusters, collapse_clusters, dedupe
 from pipeline.gate import filter_relevant
@@ -73,10 +73,19 @@ def main() -> int:
     log.info("window: kept %d of %d (issue=%s)", len(windowed), len(gated), today)
 
     fresh = collapse_clusters(assign_clusters(dedupe(windowed)))
-    known = {i["id"] for i in load_raw()}
+    known_items = load_raw()
+    known = {i["id"] for i in known_items}
     pending = [i for i in fresh if i["id"] not in known]
     chosen = select(pending)
     log.info("pending: %d of %d after known-id filter", len(pending), len(fresh))
+
+    # 新入选条目与历史缺口一起补齐一句话提炼；失败只记日志，不阻断入档与版面。
+    try:
+        cache = summarize.load_cache(summarize.DEFAULT_PATH)
+        summarize.summarize(known_items + chosen, cache)
+        summarize.save_cache(cache)
+    except Exception as exc:
+        log.error("summarize failed: %s", exc)
 
     added = append_raw(chosen, month=today[:7])
     payload = build(load_raw())
