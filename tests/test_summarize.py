@@ -18,8 +18,10 @@ class TestBuildPrompt(unittest.TestCase):
         self.assertIn('"id": "a"', prompt)
         self.assertIn('"id": "b"', prompt)
         self.assertIn("3W", prompt)
-        self.assertIn("30", prompt)
+        self.assertIn("≤30 个字符", prompt)
         self.assertIn("一句", prompt)
+        # 长度口径与 parse_response 的 len(zh) 校验一致：整句计字符（含外文名），
+        # 否则 "Karyopharm…" 这类条目会被校验静默丢弃。
 
 
 class TestParseResponse(unittest.TestCase):
