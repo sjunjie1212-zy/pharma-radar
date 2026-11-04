@@ -29,7 +29,7 @@ html {
 body {
   position: relative;
   margin: 0;
-  padding: 0 1rem 3.5rem;
+  padding: 0 0 3.5rem;
   min-height: 100vh;
   background:
     radial-gradient(60rem 32rem at 12% -8%, rgba(94, 233, 168, 0.10), transparent 60%),
@@ -61,7 +61,7 @@ body::after {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.25rem 0.75rem;
-  padding: 1.4rem 0 0.9rem;
+  padding: 1.4rem 1rem 0.9rem;
 }
 
 .brand {
@@ -95,7 +95,7 @@ body::after {
 .views {
   display: flex;
   gap: 0.4rem;
-  padding: 0.2rem 0 0.7rem;
+  padding: 0.2rem 1rem 0.7rem;
 }
 
 .view-tab {
@@ -121,7 +121,7 @@ body::after {
   display: flex;
   gap: 0.4rem;
   overflow-x: auto;
-  padding: 0 0 0.9rem;
+  padding: 0 1rem 0.9rem;
   border-bottom: 1px solid var(--line);
   scrollbar-width: none;
 }
@@ -162,6 +162,7 @@ body::after {
   justify-content: space-between;
   gap: 0.5rem;
   margin-top: 0.9rem;
+  padding: 0 1rem;
 }
 
 .day-nav[hidden] {
@@ -199,40 +200,36 @@ body::after {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 日期封面 ---------- */
+/* ---------- 日期封面（整幅铺满） ---------- */
 
 .day {
   margin-top: 1.2rem;
 }
 
-.day-title {
+.day-hero {
   position: relative;
   isolation: isolate;
-  margin: 0 0 1.6rem;
-  padding: 2.6rem 1.25rem 1.9rem;
-  border: 1px solid var(--line);
-  border-radius: 26px;
+  margin: 0 0 1.8rem;
+  padding: 2.7rem 1.25rem 1.4rem;
   overflow: hidden;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   background:
     radial-gradient(38rem 20rem at 88% -20%, rgba(94, 233, 168, 0.20), transparent 62%),
     radial-gradient(30rem 18rem at 105% 110%, rgba(242, 181, 68, 0.14), transparent 58%),
     radial-gradient(26rem 16rem at 6% 130%, rgba(185, 140, 255, 0.10), transparent 60%),
     linear-gradient(160deg, #101315, #0b0d10 62%);
-  font-size: clamp(2.5rem, 12.5vw, 4.4rem);
-  font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 /* 有机光斑：不做图片，两团模糊渐变 */
-.day-title::before {
+.day-hero::before {
   content: "";
   position: absolute;
   z-index: -1;
-  right: -18%;
-  top: -34%;
-  width: 78%;
+  right: -12%;
+  top: -46%;
+  width: 74%;
   aspect-ratio: 1;
   border-radius: 50%;
   background:
@@ -243,10 +240,10 @@ body::after {
   opacity: 0.8;
 }
 
-.day-title::after {
+.day-hero::after {
   content: "DAILY BRIEF · 今日";
   position: absolute;
-  left: 1.3rem;
+  left: 1.25rem;
   top: 1.15rem;
   font-size: 0.7rem;
   font-weight: 600;
@@ -255,11 +252,29 @@ body::after {
   color: var(--muted);
 }
 
+.day-title {
+  margin: 0;
+  font-size: clamp(2.7rem, 13vw, 5rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-meta {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- 分区标题 ---------- */
 
 .must-section,
 .all-section {
   margin-bottom: 2.2rem;
+  padding: 0 1rem;
 }
 
 .section-title {
@@ -542,18 +557,22 @@ body::after {
 /* ---------- 催化剂 ---------- */
 
 .catalysts .day-title {
-  padding: 2rem 1.25rem 1.5rem;
-  font-size: clamp(1.9rem, 8vw, 2.6rem);
+  font-size: clamp(1.9rem, 7vw, 3rem);
 }
 
-.catalysts .day-title::after {
+.catalysts .day-hero::after {
   content: "CATALYST CALENDAR · 催化剂";
+}
+
+.catalysts > .quiet {
+  padding: 0 1rem;
 }
 
 .catalyst-list {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+  padding: 0 1rem;
 }
 
 .catalyst-row {
@@ -618,25 +637,39 @@ body::after {
 
 @media (min-width: 640px) {
   body {
-    padding: 0 1.5rem 4.5rem;
-    max-width: 940px;
-    margin: 0 auto;
+    padding: 0 0 4.5rem;
+  }
+
+  .top,
+  .views,
+  .tabs,
+  .day-nav {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .must-section,
+  .all-section,
+  .catalysts > .quiet,
+  .catalyst-list {
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 
   .must-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
   }
 
   .list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
   }
 
-  .day-title {
-    padding: 3rem 1.75rem 2.2rem;
+  .day-hero {
+    padding: 3.2rem 2rem 1.6rem;
   }
 
-  .day-title::after {
-    left: 1.8rem;
+  .day-hero::after {
+    left: 2rem;
     top: 1.35rem;
   }
 }

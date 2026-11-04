@@ -168,6 +168,16 @@ function updateDayNav(day) {
   }
 }
 
+function dayHero(title) {
+  const hero = el("div", "day-hero");
+  hero.appendChild(el("h2", "day-title", title));
+  const generatedAt = state.data && state.data.generated_at;
+  if (generatedAt) {
+    hero.appendChild(el("p", "day-meta", "更新于 " + shortTime(generatedAt)));
+  }
+  return hero;
+}
+
 function renderDay(dayData) {
   const app = document.getElementById("app");
   if (!app) return;
@@ -186,7 +196,7 @@ function renderDay(dayData) {
 
   const section = el("section", "day");
   section.dataset.date = dayData.date || "";
-  section.appendChild(el("h2", "day-title", dayData.date || "未知日期"));
+  section.appendChild(dayHero(dayData.date || "未知日期"));
 
   const mustSection = el("section", "must-section");
   mustSection.appendChild(el("h3", "section-title", "必看"));
@@ -313,7 +323,7 @@ function renderCatalysts(payload) {
       : [];
 
   const section = el("section", "catalysts");
-  section.appendChild(el("h2", "day-title", "催化剂日历"));
+  section.appendChild(dayHero("催化剂日历"));
   section.appendChild(
     el("p", "quiet", "未来 90 天的 III 期主要完成时点，按日期排序。日期来自申办方登记，可能改期。")
   );
@@ -366,10 +376,6 @@ function shortTime(value) {
 function start(data) {
   state.data = normalizeData(data);
   state.index = 0;
-  const generated = document.getElementById("generated");
-  if (generated) {
-    generated.textContent = state.data.generated_at ? "更新于 " + shortTime(state.data.generated_at) : "";
-  }
   renderCurrentDay();
 }
 
