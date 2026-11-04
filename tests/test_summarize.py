@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 from pipeline import summarize
 
@@ -57,6 +58,14 @@ class TestCache(unittest.TestCase):
 
     def test_missing_file_is_empty(self):
         self.assertEqual(summarize.load_cache("/nonexistent/summaries.json"), {})
+
+    def test_non_utf8_file_is_empty(self):
+        # build() 无保护地调用 load_cache；坏编码不能让每日构建在 raw 已落盘后崩掉。
+        with tempfile.TemporaryDirectory() as td:
+            path = os.path.join(td, "summaries.json")
+            with open(path, "wb") as fh:
+                fh.write(b"\xff\xfe")
+            self.assertEqual(summarize.load_cache(path), {})
 
 
 class TestSummarize(unittest.TestCase):
@@ -125,3 +134,20 @@ class TestSummarize(unittest.TestCase):
             raise AssertionError("must not run")
 
         self.assertEqual(summarize.summarize([], {}, runner=runner, enabled=True), {})
+
+
+class TestDefaultEnabled(unittest.TestCase):
+    def test_env_off_or_missing_cli_disables(self):
+        clean = {k: v for k, v in os.environ.items() if k != "PHARMA_RADAR_MODEL"}
+        with mock.patch.dict(os.environ, {**clean, "PHARMA_RADAR_MODEL": "off"},
+                             clear=True), \
+             mock.patch.object(summarize.shutil, "which",
+                               return_value="/usr/bin/claude"):
+            self.assertFalse(summarize._default_enabled())
+        with mock.patch.dict(os.environ, clean, clear=True), \
+             mock.patch.object(summarize.shutil, "which", return_value=None):
+            self.assertFalse(summarize._default_enabled())
+        with mock.patch.dict(os.environ, clean, clear=True), \
+             mock.patch.object(summarize.shutil, "which",
+                               return_value="/usr/bin/claude"):
+            self.assertTrue(summarize._default_enabled())

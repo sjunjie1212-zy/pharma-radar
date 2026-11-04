@@ -79,10 +79,13 @@ def main() -> int:
     chosen = select(pending)
     log.info("pending: %d of %d after known-id filter", len(pending), len(fresh))
 
-    # 新入选条目与历史缺口一起补齐一句话提炼；失败只记日志，不阻断入档与版面。
+    # 先补今天入选的，再补历史缺口：两次调用共用缓存，各自受 summarize 的 limit
+    # 约束。合并成一个列表时，历史 backlog ≥ limit 会把今天的条目截掉，页面只能
+    # 退回英文原标题。失败只记日志，不阻断入档与版面。
     try:
         cache = summarize.load_cache(summarize.DEFAULT_PATH)
-        summarize.summarize(known_items + chosen, cache)
+        summarize.summarize(chosen, cache)
+        summarize.summarize(known_items, cache)
         summarize.save_cache(cache)
     except Exception as exc:
         log.error("summarize failed: %s", exc)

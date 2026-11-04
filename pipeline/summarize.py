@@ -71,7 +71,7 @@ def load_cache(path: str = DEFAULT_PATH) -> dict:
     try:
         with open(path, encoding="utf-8") as fh:
             data = json.load(fh)
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return {}
     return data if isinstance(data, dict) else {}
 

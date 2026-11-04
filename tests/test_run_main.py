@@ -93,10 +93,24 @@ class TestMainOrdering(unittest.TestCase):
         stored = [_item("old", "昨日旧条目")]
         fresh = [_item("new", "今天的新条目")]
         result = self._run(fresh, stored)
-        self.assertEqual(len(result["summarize_items"]), 1)
-        ids = [i["id"] for i in result["summarize_items"][0]]
-        self.assertIn("old", ids)
-        self.assertIn("new", ids)
+        self.assertEqual(len(result["summarize_items"]), 2)
+        first = [i["id"] for i in result["summarize_items"][0]]
+        second = [i["id"] for i in result["summarize_items"][1]]
+        self.assertEqual(first, ["new"])
+        self.assertEqual(second, ["old"])
+
+    def test_chosen_summarized_first_despite_history_backlog(self):
+        # 历史 backlog 超过 summarize 的 limit=20 时，今天的条目必须先提炼，
+        # 否则页面只能显示英文原标题。
+        stored = [_item(f"old{n}", f"{COMPANIES[n]}：历史第{n}条", DIMS[n % 6])
+                  for n in range(25)]
+        result = self._run([_item("new", "今天的新条目")], stored)
+        self.assertEqual(len(result["summarize_items"]), 2)
+        first = [i["id"] for i in result["summarize_items"][0]]
+        second = [i["id"] for i in result["summarize_items"][1]]
+        self.assertEqual(first, ["new"])
+        self.assertNotIn("new", second)
+        self.assertEqual(len(second), 25)
 
     def test_summarize_runs_before_append_raw(self):
         result = self._run([_item("new", "今天的新条目")], [])
@@ -123,11 +137,11 @@ class TestMainOrdering(unittest.TestCase):
         self.assertIn("append", result["events"])
 
     def test_empty_run_passes_empty_list_to_summarize(self):
-        # 没有新条目也没有历史缺口时仍以空列表调用；是否真提炼由
+        # 没有新条目也没有历史缺口时仍以两次空列表调用；是否真提炼由
         # summarize 内部 early-return 决定，接线层不做第二次判断。
         result = self._run([], [])
         self.assertEqual(result["appended"], [])
-        self.assertEqual(result["summarize_items"], [[]])
+        self.assertEqual(result["summarize_items"], [[], []])
 
 
 if __name__ == "__main__":
