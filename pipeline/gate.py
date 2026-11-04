@@ -4,10 +4,11 @@
 的公共卫生报道本身不改变产业判断；要进版面，标题里必须有药品、临床、监管、支付、
 交易或平台技术信号。
 
-分源策略：需过词表的源（stat 是综合兴趣台；nmpa-news 与 nature-biotech 按策略选择
-逐条过词表）——stat 混有观点/政治稿，nmpa-news 与 nature-biotech 为审慎起见同样精筛。
-专业医药源整源可信，直接放行，避免「Karyopharm ... bankruptcy」这类无通用信号词的
-产业稿被误杀。未知源按需过词表处理（默认拦截），词表命中才放行。
+分源策略：需过词表的源（stat 是综合兴趣台；nmpa-news、nature-biotech 与 bioon 按策略
+选择逐条过词表）——stat 混有观点/政治稿，nmpa-news 与 nature-biotech 为审慎起见同样精筛，
+生物谷是泛生命科学站，混有消费导购与科普稿，同样逐条精筛。专业医药源整源可信，直接放行，
+避免「Karyopharm ... bankruptcy」这类无通用信号词的产业稿被误杀。未知源按需过词表处理
+（默认拦截），词表命中才放行。
 """
 from __future__ import annotations
 
@@ -36,12 +37,13 @@ TERMS: tuple[str, ...] = (
 
 # 需过词表的源：STAT 是综合兴趣台（混观点/政治稿）；NMPA 要闻与 Nature Biotechnology
 # 按策略选择同样逐条过词表，因此也列在此处。
-GATED_SOURCES: tuple[str, ...] = ("stat", "nmpa-news", "nature-biotech")
+# 生物谷是泛生命科学站，混有消费导购与科普稿，按策略改为逐条过词表。
+GATED_SOURCES: tuple[str, ...] = ("stat", "nmpa-news", "nature-biotech", "bioon")
 
 # 专业医药源白名单：整源放行。未知源不在名单内，按需过词表处理。
 TRUSTED_SOURCES: tuple[str, ...] = (
     "biopharmadive", "endpoints", "fierce-biotech", "fierce-pharma", "nmpa", "trials",
-    "openfda", "pubmed", "bioon", "yaozh", "drugtimes",
+    "openfda", "pubmed", "yaozh", "drugtimes",
 )
 
 # 词干匹配（左边界，无右边界）：覆盖 therapy/therapies、vaccine/vaccines、

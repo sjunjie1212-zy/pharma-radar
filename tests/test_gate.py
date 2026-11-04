@@ -123,9 +123,11 @@ class TestPrecisionTerms(unittest.TestCase):
 
 
 class TestChineseMediaTrusted(unittest.TestCase):
-    def test_bioon_trusted(self):
-        self.assertIn("bioon", TRUSTED_SOURCES)
-        self.assertFalse(should_gate({"source": "bioon"}))
+    def test_bioon_gated(self):
+        # 生物谷已按策略移出白名单：泛生命科学站混有消费导购稿，需逐条过词表。
+        self.assertNotIn("bioon", TRUSTED_SOURCES)
+        self.assertIn("bioon", GATED_SOURCES)
+        self.assertTrue(should_gate({"source": "bioon"}))
 
     def test_yaozh_trusted(self):
         self.assertIn("yaozh", TRUSTED_SOURCES)
@@ -139,6 +141,39 @@ class TestChineseMediaTrusted(unittest.TestCase):
         # 36氪、界面这类综合媒体必须逐条过词表，不能因为中文媒体接入而整源放行。
         self.assertTrue(should_gate({"source": "36kr"}))
         self.assertTrue(should_gate({"source": "jiemian"}))
+
+
+class TestBioonPerItem(unittest.TestCase):
+    """生物谷改为逐条过词表后，消费稿被拦、产业稿放行。"""
+
+    def bioon(self, title):
+        return {**item(title), "source": "bioon"}
+
+    def test_consumer_titles_blocked(self):
+        titles = [
+            "高性价比的胶原蛋白肽怎么挑:5款产品横评,把每份添加量和份数一起算",
+            "熬夜后怎么补救身体？吃辅酶Q10管用吗？推荐什么品牌？熬夜人群的还原型辅酶Q10怎么选",
+            "关注血糖健康怎么选鱼油？这份选购指南帮你避开智商税",
+        ]
+        for title in titles:
+            with self.subTest(title=title):
+                entry = self.bioon(title)
+                self.assertTrue(should_gate(entry))
+                self.assertFalse(is_relevant(entry))
+                self.assertEqual(filter_relevant([entry]), [])
+
+    def test_industry_titles_kept(self):
+        titles = [
+            "特宝生物长效生长激素10mg规格获批",
+            "7.57亿美元！熙源安健偏头痛管线出海艾伯维",
+            "某创新药III期临床达到主要终点",
+        ]
+        for title in titles:
+            with self.subTest(title=title):
+                entry = self.bioon(title)
+                self.assertTrue(should_gate(entry))
+                self.assertTrue(is_relevant(entry))
+                self.assertEqual(filter_relevant([entry]), [entry])
 
 
 if __name__ == "__main__":
