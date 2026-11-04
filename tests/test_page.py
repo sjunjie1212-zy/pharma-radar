@@ -115,10 +115,14 @@ class TestPageBehaviour(unittest.TestCase):
         self.assertIn("card-link", js)
         self.assertIn('"→"', js)
         self.assertNotIn("card-orig", js)
+        # Regression guard: card root must stay a div, never an <a>.
+        self.assertNotIn('el(url ? "a" : "div"', js)
+        self.assertIn('el("div", "card dim-"', js)
 
     def test_css_has_card_link_style(self):
         css = (ROOT / "style.css").read_text(encoding="utf-8")
         self.assertIn(".card-link", css)
+        self.assertNotIn(".card-orig", css)
 
 
 if __name__ == "__main__":
