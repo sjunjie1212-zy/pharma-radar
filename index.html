@@ -8,16 +8,18 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand">
-    <h1>药脉</h1>
-    <span class="tagline">每日医药情报</span>
+  <div class="masthead">
+    <div class="brand">
+      <h1>药脉</h1>
+      <span class="tagline">每日医药情报</span>
+    </div>
+    <nav class="views" aria-label="切换视图">
+      <button class="view-tab active" type="button" data-view="today" aria-pressed="true">今日</button>
+      <button class="view-tab" type="button" data-view="catalysts" aria-pressed="false">催化剂</button>
+    </nav>
   </div>
   <div id="hero-date" class="hero-date"></div>
 </header>
-<nav class="views" aria-label="切换视图">
-  <button class="view-tab active" type="button" data-view="today" aria-pressed="true">今日</button>
-  <button class="view-tab" type="button" data-view="catalysts" aria-pressed="false">催化剂</button>
-</nav>
 <nav class="tabs" aria-label="按维度筛选">
   <button class="tab active" type="button" data-dim="all" aria-pressed="true">全部</button>
   <button class="tab" type="button" data-dim="D1" aria-pressed="false">D1 格局</button>

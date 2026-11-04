@@ -167,10 +167,11 @@ function updateDayNav(day) {
 }
 
 /* 日期与更新时间放在页头右上角，不占正文版面 */
-function renderHeaderDate(title) {
+function renderHeaderDate(title, view) {
   const slot = document.getElementById("hero-date");
   if (!slot) return;
   slot.textContent = "";
+  slot.dataset.view = view || "today";
   slot.appendChild(el("h2", "day-title", title));
   const generatedAt = state.data && state.data.generated_at;
   if (generatedAt) {
@@ -323,7 +324,7 @@ function renderCatalysts(payload) {
       : [];
 
   const section = el("section", "catalysts");
-  renderHeaderDate("催化剂日历");
+  renderHeaderDate("催化剂日历", "catalysts");
   section.appendChild(
     el("p", "quiet", "未来 90 天的 III 期主要完成时点，按日期排序。日期来自申办方登记，可能改期。")
   );
