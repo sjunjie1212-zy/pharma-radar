@@ -357,12 +357,18 @@ function setView(view) {
   renderCurrentDay();
 }
 
+function shortTime(value) {
+  const raw = String(value || "");
+  const m = raw.match(/^\d{4}-(\d{2}-\d{2})T(\d{2}:\d{2})/);
+  return m ? m[1] + " " + m[2] : raw;
+}
+
 function start(data) {
   state.data = normalizeData(data);
   state.index = 0;
   const generated = document.getElementById("generated");
   if (generated) {
-    generated.textContent = state.data.generated_at ? "更新于 " + state.data.generated_at : "";
+    generated.textContent = state.data.generated_at ? "更新于 " + shortTime(state.data.generated_at) : "";
   }
   renderCurrentDay();
 }

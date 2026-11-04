@@ -1,69 +1,127 @@
+/* 药脉 · 暗色编辑风。零依赖：字体走系统栈，有机渐变与噪点全用 CSS/SVG 内联。 */
+
 :root {
-  --bg: #fbfaf7;
-  --card: #ffffff;
-  --fg: #1f1d1a;
-  --muted: #7a746c;
-  --line: #e6e1d8;
-  --must-bg: #fffdf5;
-  --d1: #3f6f5a;
-  --d2: #4a6fa5;
-  --d3: #8a5a3b;
-  --d4: #7a5b8a;
-  --d5: #a2762f;
-  --d6: #5c6670;
+  --bg: #08090b;
+  --panel: #0e1013;
+  --panel-2: #13161b;
+  --fg: #f4f2ee;
+  --muted: #8b8f98;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --must-bg: #11140f;
+
+  --d1: #5ee9a8;
+  --d2: #6aa8ff;
+  --d3: #f2b544;
+  --d4: #b98cff;
+  --d5: #ff7a6e;
+  --d6: #9aa3b2;
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  padding: 0 1rem 3rem;
+html {
   background: var(--bg);
+}
+
+body {
+  position: relative;
+  margin: 0;
+  padding: 0 1rem 3.5rem;
+  min-height: 100vh;
+  background:
+    radial-gradient(60rem 32rem at 12% -8%, rgba(94, 233, 168, 0.10), transparent 60%),
+    radial-gradient(48rem 30rem at 95% 2%, rgba(242, 181, 68, 0.08), transparent 55%),
+    var(--bg);
   color: var(--fg);
-  font-family: -apple-system, "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+  font-family: -apple-system, "PingFang SC", "Noto Sans SC", "Helvetica Neue", system-ui, sans-serif;
   line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
 }
 
-/* ---------- 页头与筛选 ---------- */
+/* 胶片噪点：给平涂暗色一点颗粒质感 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- 页头 ---------- */
 
 .top {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
+  justify-content: space-between;
   gap: 0.25rem 0.75rem;
-  padding: 1.2rem 0 0.6rem;
+  padding: 1.4rem 0 0.9rem;
 }
 
 .brand {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
 .top h1 {
   margin: 0;
   font-size: 1.35rem;
-  letter-spacing: 0.08em;
+  font-weight: 800;
+  letter-spacing: 0.16em;
 }
 
 .tagline {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .muted {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 视图 / 维度筛选 ---------- */
+
+.views {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.2rem 0 0.7rem;
+}
+
+.view-tab {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.28rem 0.95rem;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.view-tab.active {
+  border-color: var(--fg);
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 600;
 }
 
 .tabs {
   display: flex;
   gap: 0.4rem;
   overflow-x: auto;
-  padding-bottom: 0.8rem;
+  padding: 0 0 0.9rem;
   border-bottom: 1px solid var(--line);
   scrollbar-width: none;
 }
@@ -79,20 +137,21 @@ body {
 .tab {
   flex: 0 0 auto;
   border: 1px solid var(--line);
-  background: transparent;
+  background: var(--panel);
   color: var(--muted);
   border-radius: 999px;
-  padding: 0.25rem 0.7rem;
+  padding: 0.28rem 0.75rem;
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   white-space: nowrap;
   cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .tab.active {
   color: var(--fg);
-  border-color: var(--fg);
-  background: var(--card);
+  border-color: var(--line-strong);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 18px rgba(244, 242, 238, 0.08);
 }
 
 /* ---------- 日期切换 ---------- */
@@ -112,54 +171,120 @@ body {
 .day-btn {
   flex: 0 1 auto;
   border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--fg);
+  background: var(--panel);
+  color: var(--muted);
   border-radius: 999px;
-  padding: 0.3rem 0.7rem;
+  padding: 0.3rem 0.75rem;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   white-space: nowrap;
   cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.day-btn:hover:not(:disabled) {
+  color: var(--fg);
+  border-color: var(--line-strong);
 }
 
 .day-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
 .current-date {
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 日期 / 分区 ---------- */
+/* ---------- 日期封面 ---------- */
 
 .day {
-  margin-top: 1.1rem;
+  margin-top: 1.2rem;
 }
 
 .day-title {
-  margin: 0 0 0.8rem;
-  font-size: 1.05rem;
-  font-weight: 600;
+  position: relative;
+  isolation: isolate;
+  margin: 0 0 1.6rem;
+  padding: 2.6rem 1.25rem 1.9rem;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  overflow: hidden;
+  background:
+    radial-gradient(38rem 20rem at 88% -20%, rgba(94, 233, 168, 0.20), transparent 62%),
+    radial-gradient(30rem 18rem at 105% 110%, rgba(242, 181, 68, 0.14), transparent 58%),
+    radial-gradient(26rem 16rem at 6% 130%, rgba(185, 140, 255, 0.10), transparent 60%),
+    linear-gradient(160deg, #101315, #0b0d10 62%);
+  font-size: clamp(2.5rem, 12.5vw, 4.4rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
 
+/* 有机光斑：不做图片，两团模糊渐变 */
+.day-title::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -18%;
+  top: -34%;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 40%, rgba(94, 233, 168, 0.55), transparent 46%),
+    radial-gradient(circle at 68% 62%, rgba(110, 168, 255, 0.34), transparent 44%),
+    radial-gradient(circle at 54% 80%, rgba(242, 181, 68, 0.40), transparent 46%);
+  filter: blur(26px);
+  opacity: 0.8;
+}
+
+.day-title::after {
+  content: "DAILY BRIEF · 今日";
+  position: absolute;
+  left: 1.3rem;
+  top: 1.15rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.24em;
+  color: var(--muted);
+}
+
+/* ---------- 分区标题 ---------- */
+
 .must-section,
 .all-section {
-  margin-bottom: 1.6rem;
+  margin-bottom: 2.2rem;
 }
 
 .section-title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 0.6rem;
+  gap: 0.6rem;
+  margin: 0 0 0.9rem;
   color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.section-title::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--d1);
+  box-shadow: 0 0 12px rgba(94, 233, 168, 0.7);
+}
+
+.all-section .section-title::before {
+  background: var(--d3);
+  box-shadow: 0 0 12px rgba(242, 181, 68, 0.6);
 }
 
 .section-title::after {
@@ -169,49 +294,76 @@ body {
   background: var(--line);
 }
 
-/* ---------- 卡片 ---------- */
+/* ---------- 必看 ---------- */
 
 .must-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.6rem;
+  gap: 0.8rem;
+  counter-reset: must;
 }
 
+/* ---------- 卡片 ---------- */
+
 .card {
-  display: block;
+  position: relative;
+  overflow: hidden;
   margin-bottom: 0.55rem;
-  padding: 0.6rem 0.8rem;
-  background: var(--card);
-  border-left: 4px solid var(--dim, var(--d6));
-  border-radius: 3px;
+  padding: 0.85rem 1rem 0.9rem 1.05rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 55%), var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--dim, var(--d6));
+  border-radius: 14px;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-top-color: var(--line-strong);
+  border-right-color: var(--line-strong);
+  border-bottom-color: var(--line-strong);
 }
 
 .must-grid .card {
   margin-bottom: 0;
+  padding: 1.35rem 1.35rem 1.4rem;
+  border-radius: 22px;
+  counter-increment: must;
+  background:
+    radial-gradient(26rem 15rem at 92% -18%, var(--dim-glow, rgba(255, 255, 255, 0.10)), transparent 62%),
+    radial-gradient(20rem 12rem at -4% 128%, var(--dim-soft, rgba(255, 255, 255, 0.05)), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 52%),
+    var(--panel-2);
 }
 
-.card-must {
-  padding: 0.9rem 0.95rem;
-  background: var(--must-bg);
-  box-shadow: 0 1px 0 var(--line);
+.must-grid .card::after {
+  content: counter(must, decimal-leading-zero);
+  position: absolute;
+  right: 1.25rem;
+  top: 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(244, 242, 238, 0.32);
 }
 
 .card-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem 0.5rem;
+  gap: 0.35rem 0.55rem;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
 }
 
 .dim-badge {
-  padding: 0.05rem 0.45rem;
+  padding: 0.02rem 0.5rem;
+  border: 1px solid var(--dim, var(--d6));
   border-radius: 999px;
-  background: var(--dim, var(--d6));
-  color: #ffffff;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  color: var(--dim, var(--d6));
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .m-badge {
@@ -223,18 +375,19 @@ body {
 .m-text {
   color: var(--fg);
   font-weight: 700;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .m-dots {
   display: inline-flex;
   gap: 0.08rem;
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   line-height: 1;
 }
 
 .dot {
-  color: var(--line);
+  color: rgba(255, 255, 255, 0.16);
 }
 
 .dot.on {
@@ -248,77 +401,94 @@ body {
 .event::before {
   content: "·";
   margin-right: 0.35rem;
-  color: var(--line);
+  color: var(--line-strong);
 }
 
 .card-title {
-  margin: 0.3rem 0 0.15rem;
-  font-size: 0.98rem;
-  font-weight: 600;
+  margin: 0.45rem 0 0.1rem;
+  font-size: 1rem;
+  font-weight: 650;
   line-height: 1.45;
+  letter-spacing: -0.005em;
+  text-wrap: pretty;
 }
 
-.card-must .card-title {
-  font-size: 1.12rem;
+.must-grid .card-title {
+  margin-top: 0.6rem;
+  font-size: clamp(1.28rem, 5.4vw, 1.6rem);
+  font-weight: 750;
+  line-height: 1.28;
+  letter-spacing: -0.015em;
 }
 
 .card-link {
-  margin-left: 0.25rem;
+  margin-left: 0.3rem;
   color: var(--muted);
   text-decoration: none;
   font-weight: 400;
+  transition: color 0.18s ease, transform 0.18s ease;
+  display: inline-block;
 }
 
 .card-link:hover,
 .card-link:focus-visible {
-  color: var(--fg);
+  color: var(--dim, var(--fg));
+  transform: translateX(2px);
 }
 
 .card-why {
-  margin: 0.2rem 0 0;
-  color: #3a3631;
-  font-size: 0.86rem;
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+/* 全部条目：桌面两列，移动单列 */
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.55rem;
+}
+
+.list .card {
+  margin-bottom: 0;
 }
 
 .quiet {
   margin: 0;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.86rem;
 }
 
 /* ---------- 加载 / 错误提示 ---------- */
 
 .notice {
   margin-top: 1rem;
-  padding: 0.9rem 1rem;
-  background: var(--card);
-  border-left: 4px solid var(--d3);
-  border-radius: 3px;
+  padding: 1rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--d3);
+  border-radius: 14px;
 }
 
 .notice-title {
   margin: 0 0 0.35rem;
-  font-weight: 600;
+  font-weight: 650;
 }
 
-.notice-detail {
-  margin: 0 0 0.35rem;
+.notice-detail,
+.notice-hint {
+  margin: 0 0 0.5rem;
   color: var(--muted);
   font-size: 0.82rem;
   overflow-wrap: anywhere;
 }
 
-.notice-hint {
-  margin: 0 0 0.6rem;
-  color: var(--muted);
-  font-size: 0.82rem;
-}
-
 .file-pick {
   position: relative;
   display: inline-block;
-  padding: 0.3rem 0.8rem;
-  border: 1px solid var(--fg);
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   font-size: 0.82rem;
   cursor: pointer;
@@ -340,80 +510,58 @@ body {
 
 .dim-d1 {
   --dim: var(--d1);
+  --dim-soft: rgba(94, 233, 168, 0.16);
+  --dim-glow: rgba(94, 233, 168, 0.34);
 }
 .dim-d2 {
   --dim: var(--d2);
+  --dim-soft: rgba(106, 168, 255, 0.16);
+  --dim-glow: rgba(106, 168, 255, 0.34);
 }
 .dim-d3 {
   --dim: var(--d3);
+  --dim-soft: rgba(242, 181, 68, 0.16);
+  --dim-glow: rgba(242, 181, 68, 0.34);
 }
 .dim-d4 {
   --dim: var(--d4);
+  --dim-soft: rgba(185, 140, 255, 0.16);
+  --dim-glow: rgba(185, 140, 255, 0.34);
 }
 .dim-d5 {
   --dim: var(--d5);
+  --dim-soft: rgba(255, 122, 110, 0.16);
+  --dim-glow: rgba(255, 122, 110, 0.34);
 }
 .dim-d6 {
   --dim: var(--d6);
+  --dim-soft: rgba(154, 163, 178, 0.14);
+  --dim-glow: rgba(154, 163, 178, 0.34);
 }
 
-/* ---------- 稍宽屏幕 ---------- */
+/* ---------- 催化剂 ---------- */
 
-@media (min-width: 640px) {
-  body {
-    padding: 0 1.5rem 4rem;
-    max-width: 860px;
-    margin: 0 auto;
-  }
-
-  .must-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .card-title {
-    font-size: 1.02rem;
-  }
-
-  .card-must .card-title {
-    font-size: 1.18rem;
-  }
+.catalysts .day-title {
+  padding: 2rem 1.25rem 1.5rem;
+  font-size: clamp(1.9rem, 8vw, 2.6rem);
 }
 
-/* ---------- 视图切换与催化剂日历 ---------- */
-
-.views {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.2rem 0 0.6rem;
-}
-
-.view-tab {
-  border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--fg);
-  border-radius: 999px;
-  padding: 0.25rem 0.9rem;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.view-tab.active {
-  border-color: var(--d3);
-  background: var(--must-bg);
-  font-weight: 600;
+.catalysts .day-title::after {
+  content: "CATALYST CALENDAR · 催化剂";
 }
 
 .catalyst-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
 .catalyst-row {
-  background: var(--card);
+  background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--d3);
+  border-radius: 14px;
+  padding: 0.75rem 0.95rem;
 }
 
 .catalyst-head {
@@ -421,34 +569,86 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--muted);
 }
 
 .catalyst-date {
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
 .kind-badge {
   border: 1px solid var(--d3);
   color: var(--d3);
-  border-radius: 4px;
-  padding: 0 0.35rem;
+  border-radius: 999px;
+  padding: 0 0.45rem;
 }
 
 .days-left {
   color: var(--d1);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .catalyst-title {
-  margin: 0.3rem 0 0.1rem;
-  font-size: 1rem;
+  margin: 0.35rem 0 0.1rem;
+  font-size: 0.98rem;
+  font-weight: 650;
+  line-height: 1.45;
 }
 
 .catalyst-note,
 .catalyst-source {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--muted);
+}
+
+/* ---------- 焦点可见性 ---------- */
+
+.tab:focus-visible,
+.view-tab:focus-visible,
+.day-btn:focus-visible,
+.card-link:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+/* ---------- 稍宽屏幕 ---------- */
+
+@media (min-width: 640px) {
+  body {
+    padding: 0 1.5rem 4.5rem;
+    max-width: 940px;
+    margin: 0 auto;
+  }
+
+  .must-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .day-title {
+    padding: 3rem 1.75rem 2.2rem;
+  }
+
+  .day-title::after {
+    left: 1.8rem;
+    top: 1.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+
+  .card:hover,
+  .card-link:hover,
+  .card-link:focus-visible {
+    transform: none;
+  }
 }
