@@ -140,11 +140,22 @@ body {
   font-weight: 500;
 }
 
+/* 维度筛选、日期切换与更新时间同处一行，窄屏时后两者折到第二行 */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem var(--pad) 0.9rem;
+}
+
 .tabs {
   display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
   gap: 0.45rem;
   overflow-x: auto;
-  padding: 0.6rem var(--pad) 0.9rem;
+  padding: 0;
   scrollbar-width: none;
 }
 
@@ -193,9 +204,8 @@ body {
 .day-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 1.1rem var(--pad) 0;
+  gap: 0.45rem;
+  padding: 0;
 }
 
 .day-nav[hidden] {
@@ -228,13 +238,14 @@ body {
 }
 
 .day-meta {
-  order: -1;
-  margin: 0;
+  flex: 0 0 auto;
+  margin: 0 0 0 auto;
   color: var(--ink-soft);
   font-family: var(--sans);
   font-size: 0.72rem;
   letter-spacing: 0.06em;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* ---------- 分区标题 ---------- */
@@ -655,6 +666,11 @@ body {
   .hero-date {
     grid-column: 2;
     grid-row: 1;
+  }
+
+  /* 窄屏放不下三组，筛选独占一行，日期切换与更新时间折到下一行 */
+  .tabs {
+    flex: 1 0 100%;
   }
 }
 

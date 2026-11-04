@@ -166,17 +166,19 @@ function updateDayNav(day) {
   }
 }
 
-/* 日期与更新时间放在页头右上角，不占正文版面 */
+/* 日期在页头右上角；更新时间与维度筛选同一行，靠右 */
 function renderHeaderDate(title, view) {
   const slot = document.getElementById("hero-date");
-  if (!slot) return;
-  slot.textContent = "";
-  slot.dataset.view = view || "today";
-  slot.appendChild(el("h2", "day-title", title));
-  const generatedAt = state.data && state.data.generated_at;
-  if (generatedAt) {
-    slot.appendChild(el("p", "day-meta", "更新于 " + shortTime(generatedAt)));
+  if (slot) {
+    slot.textContent = "";
+    slot.dataset.view = view || "today";
+    slot.appendChild(el("h2", "day-title", title));
   }
+
+  const meta = document.getElementById("day-meta");
+  if (!meta) return;
+  const generatedAt = state.data && state.data.generated_at;
+  meta.textContent = generatedAt ? "更新于 " + shortTime(generatedAt) : "";
 }
 
 function renderDay(dayData) {
