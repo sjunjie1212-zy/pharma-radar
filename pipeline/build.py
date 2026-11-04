@@ -56,17 +56,22 @@ def _is_must(item: dict) -> bool:
     return item.get("m", 0) >= 4 and item.get("dimension") in {"D1", "D3", "D4"}
 
 
-def build(items: list[dict], out_path: str = "data/items.json",
-          summaries_path: str = summarize.DEFAULT_PATH) -> dict:
-    cache = summarize.load_cache(summaries_path)
-    merged: list[dict] = []
+def _apply_summaries(items: list[dict], cache: dict) -> list[dict]:
+    out: list[dict] = []
     for item in items:
         entry = cache.get(item.get("id") or "")
-        if entry and entry.get("title_zh"):
-            merged.append({**item, "title_zh": entry["title_zh"]})
+        zh = entry.get("title_zh") if isinstance(entry, dict) else None
+        if isinstance(zh, str) and zh.strip():
+            out.append({**item, "title_zh": zh.strip()})
         else:
-            merged.append(item)
-    items = merged
+            out.append(item)
+    return out
+
+
+def build(items: list[dict], out_path: str = "data/items.json",
+          summaries_path: str = summarize.DEFAULT_PATH) -> dict:
+    # 只读一次缓存；提炼在逐日门控/截断之后才套用，避免 title_zh 参与 gate。
+    cache = summarize.load_cache(summaries_path)
 
     by_date: dict[str, list[dict]] = defaultdict(list)
     for item in items:
@@ -83,6 +88,9 @@ def build(items: list[dict], out_path: str = "data/items.json",
                      len(relevant), len(day_rows), date)
         # 再截断一次：同日重跑会累积 raw，不能让配额在上游被绕过。
         rows = select(relevant)
+        # 提炼只上最终展示行：若在 gate 之前合并，title_zh 会把当前门拒绝的
+        # 条目救回来（filter_relevant 同时匹配 title 与 title_zh）。
+        rows = _apply_summaries(rows, cache)
         must = [r["id"] for r in rows if _is_must(r)][:5]
         days.append({"date": date, "must": must, "items": rows})
 

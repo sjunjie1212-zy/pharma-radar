@@ -129,6 +129,73 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(got["a"]["why"], "")
         self.assertEqual(got["b"]["title_zh"], "")
 
+    def test_malformed_cache_entries_do_not_raise_or_change_items(self):
+        with tempfile.TemporaryDirectory() as td:
+            sum_path = pathlib.Path(td) / "summaries.json"
+            sum_path.write_text(
+                json.dumps(
+                    {
+                        "a": "plain text",
+                        "b": {"title_zh": 123},
+                        "c": {"title_zh": "   "},
+                        "d": {"title_zh": None},
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            items = [_item(i) for i in ("a", "b", "c", "d")]
+            out = pathlib.Path(td) / "items.json"
+            data = build(items, out_path=str(out), summaries_path=str(sum_path))
+        got = {i["id"]: i for i in data["days"][0]["items"]}
+        self.assertEqual(set(got), {"a", "b", "c", "d"})
+        for item_id in got:
+            self.assertEqual(got[item_id]["title_zh"], "", item_id)
+
+    def test_summary_cannot_resurrect_item_rejected_by_gate(self):
+        # 提炼在门控之后套用：缓存里的 title_zh 不能把当前门拒绝的条目救回来。
+        with tempfile.TemporaryDirectory() as td:
+            sum_path = pathlib.Path(td) / "summaries.json"
+            sum_path.write_text(
+                json.dumps({"bad": {"title_zh": "药品获批"}}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            bad = _item("bad", source="stat")
+            bad["title"] = "Opinion: how meditation helped me"
+            out = pathlib.Path(td) / "items.json"
+            data = build([bad], out_path=str(out), summaries_path=str(sum_path))
+        ids = [r["id"] for d in data["days"] for r in d["items"]]
+        self.assertNotIn("bad", ids)
+
+    def test_summaries_reach_rows_that_pass_the_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            sum_path = pathlib.Path(td) / "summaries.json"
+            sum_path.write_text(
+                json.dumps({"good": {"title_zh": "FDA 批准新药"}}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            good = _item("good", source="stat")
+            good["title"] = "FDA approves new drug for NSCLC"
+            out = pathlib.Path(td) / "items.json"
+            data = build([good], out_path=str(out), summaries_path=str(sum_path))
+        got = {r["id"]: r for r in data["days"][0]["items"]}
+        self.assertEqual(got["good"]["title_zh"], "FDA 批准新药")
+
+    def test_summaries_do_not_mutate_caller_items(self):
+        with tempfile.TemporaryDirectory() as td:
+            sum_path = pathlib.Path(td) / "summaries.json"
+            sum_path.write_text(
+                json.dumps({"a": {"title_zh": "一句话提炼"}}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            items = [_item("a")]
+            out = pathlib.Path(td) / "items.json"
+            data = build(items, out_path=str(out), summaries_path=str(sum_path))
+        self.assertEqual(items[0]["title_zh"], "")
+        self.assertEqual(data["days"][0]["items"][0]["title_zh"], "一句话提炼")
+        self.assertEqual(len(items[0]), 18)
+        self.assertEqual(len(data["days"][0]["items"][0]), 18)
+
     def test_js_artifact_matches_json_payload(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = pathlib.Path(tmp) / "items.json"
