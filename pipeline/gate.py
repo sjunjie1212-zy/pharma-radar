@@ -9,6 +9,10 @@
 生物谷是泛生命科学站，混有消费导购与科普稿，同样逐条精筛。专业医药源整源可信，直接放行，
 避免「Karyopharm ... bankruptcy」这类无通用信号词的产业稿被误杀。未知源按需过词表处理
 （默认拦截），词表命中才放行。
+
+在放行判定之上还有一层消费意图否决策略：标题表达的是购买/使用/营销意图而不是产业信号时，
+不论来源是否在白名单（yaozh 这类整源可信源也算）一律拦截。原因是「药」「品牌」「渠道」
+这类通用词会让消费稿误过词表。
 """
 from __future__ import annotations
 
@@ -56,6 +60,14 @@ STEMS: tuple[str, ...] = (
     "immunotherap", "chemotherap",
 )
 
+# 消费稿否决词：表达购买/使用/营销意图，而不是产业信号。命中即拦截，与来源白名单无关。
+# 判据是意图而非单个名词——「药」「品牌」「渠道」单独出现仍可能是产业稿，
+# 只有组合出导购、比价、种草、榜单之类的语境才拦。
+BLOCK_TERMS: tuple[str, ...] = (
+    "怎么选", "怎么挑", "如何选", "选购", "横评", "智商税",
+    "推荐什么品牌", "管用吗", "种草", "销量榜", "调理指南", "营销怎么",
+)
+
 # "pharmac" 词干会命中零售/执业场景的 pharmacy 同形词；这些不是产业信号，
 # 沿用既有 fixture 的判定（pharma 不匹配 pharmacy）。
 _STEM_STOPWORDS = frozenset(("pharmacy", "pharmacies", "pharmacist", "pharmacists"))
@@ -91,5 +103,16 @@ def is_relevant(item: dict) -> bool:
     return any(_hit(text, term) for term in TERMS) or any(_stem_hit(text, stem) for stem in STEMS)
 
 
+def is_consumer_copy(item: dict) -> bool:
+    """标题是否表达购买/使用/营销意图。命中即否决，不看来源。"""
+    text = f"{item.get('title', '')} {item.get('title_zh', '')}".lower()
+    return any(_hit(text, term) for term in BLOCK_TERMS)
+
+
 def filter_relevant(items: list[dict], gated_sources: tuple[str, ...] = GATED_SOURCES) -> list[dict]:
-    return [i for i in items if not should_gate(i, gated_sources) or is_relevant(i)]
+    """先否决消费稿，再按来源策略与词表决定放行。"""
+    return [
+        i for i in items
+        if not is_consumer_copy(i)
+        and (not should_gate(i, gated_sources) or is_relevant(i))
+    ]

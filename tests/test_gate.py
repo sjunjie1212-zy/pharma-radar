@@ -1,7 +1,8 @@
 import unittest
 
-from pipeline.gate import (GATED_SOURCES, TRUSTED_SOURCES, filter_relevant,
-                           is_relevant, should_gate)
+from pipeline.gate import (BLOCK_TERMS, GATED_SOURCES, TRUSTED_SOURCES,
+                           filter_relevant, is_consumer_copy, is_relevant,
+                           should_gate)
 
 
 def item(title, title_zh=""):
@@ -174,6 +175,77 @@ class TestBioonPerItem(unittest.TestCase):
                 self.assertTrue(should_gate(entry))
                 self.assertTrue(is_relevant(entry))
                 self.assertEqual(filter_relevant([entry]), [entry])
+
+
+class TestConsumerBlock(unittest.TestCase):
+    """消费/营销意图否决对白名单源同样生效；产业稿不受影响。"""
+
+    def entry(self, title, source):
+        return {**item(title), "source": source}
+
+    def assert_blocked(self, entry):
+        self.assertEqual(filter_relevant([entry]), [])
+
+    def test_trusted_source_wordlist_would_pass_but_consumer_block_wins(self):
+        # 「用药」含「药」，词表本身会放行；只能靠消费意图否决拦下。
+        entry = self.entry(
+            "突发水样便、急性拉肚子怎么办？细菌感染性腹泻用药和益生菌调理指南",
+            "yaozh",
+        )
+        self.assertIn("yaozh", TRUSTED_SOURCES)
+        self.assertFalse(should_gate(entry))
+        self.assertTrue(is_relevant(entry))
+        self.assertTrue(is_consumer_copy(entry))
+        self.assert_blocked(entry)
+
+    def test_marketing_campaign_blocked_from_trusted_source(self):
+        entry = self.entry(
+            "流感季营销怎么打：感冒清热&止咳祛痰，渠道布局与种草洞察",
+            "yaozh",
+        )
+        self.assertIn("yaozh", TRUSTED_SOURCES)
+        self.assertFalse(should_gate(entry))
+        self.assertTrue(is_consumer_copy(entry))
+        self.assert_blocked(entry)
+
+    def test_sales_ranking_blocked_from_trusted_source(self):
+        entry = self.entry("内窥镜，品牌市场销量榜TOP5公布", "yaozh")
+        self.assertIn("yaozh", TRUSTED_SOURCES)
+        self.assertFalse(should_gate(entry))
+        self.assertTrue(is_consumer_copy(entry))
+        self.assert_blocked(entry)
+
+    def test_industry_approval_not_blocked(self):
+        entry = self.entry("特宝生物长效生长激素10mg规格获批", "bioon")
+        self.assertFalse(is_consumer_copy(entry))
+        self.assertEqual(filter_relevant([entry]), [entry])
+
+    def test_industry_outbound_deal_not_blocked(self):
+        entry = self.entry("7.57亿美元！熙源安健偏头痛管线出海艾伯维", "bioon")
+        self.assertFalse(is_consumer_copy(entry))
+        self.assertEqual(filter_relevant([entry]), [entry])
+
+    def test_research_paper_not_blocked(self):
+        # 标题无通用产业词，靠整源可信放行；否决词表必须不碰它。
+        entry = self.entry(
+            "Cancer Cell：干扰素的“哨声”，高栋团队揭示胰腺癌对KRAS-G12D的作用",
+            "yaozh",
+        )
+        self.assertFalse(is_consumer_copy(entry))
+        self.assertEqual(filter_relevant([entry]), [entry])
+
+    def test_phase3_endpoint_not_blocked(self):
+        entry = self.entry("某创新药III期临床达到主要终点", "bioon")
+        self.assertFalse(is_consumer_copy(entry))
+        self.assertEqual(filter_relevant([entry]), [entry])
+
+
+class TestBlockTerms(unittest.TestCase):
+    def test_block_terms_are_chinese_substrings(self):
+        # 全部为中文子串，走 _hit 的子串分支；出现 ASCII 词条需重新审视边界语义。
+        for term in BLOCK_TERMS:
+            with self.subTest(term=term):
+                self.assertTrue(all("一" <= ch <= "鿿" for ch in term))
 
 
 if __name__ == "__main__":
