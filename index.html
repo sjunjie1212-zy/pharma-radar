@@ -12,9 +12,7 @@
     <h1>药脉</h1>
     <span class="tagline">每日医药情报</span>
   </div>
-  <div class="swatches" aria-hidden="true">
-    <span></span><span></span><span></span><span></span>
-  </div>
+  <div id="hero-date" class="hero-date"></div>
 </header>
 <nav class="views" aria-label="切换视图">
   <button class="view-tab active" type="button" data-view="today" aria-pressed="true">今日</button>
@@ -31,7 +29,6 @@
 </nav>
 <nav id="day-nav" class="day-nav" aria-label="切换日期" hidden>
   <button id="prev-day" class="day-btn" type="button">← 前一天</button>
-  <span id="current-date" class="current-date"></span>
   <button id="next-day" class="day-btn" type="button">后一天 →</button>
 </nav>
 <main id="app"></main>

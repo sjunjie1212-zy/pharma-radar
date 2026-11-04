@@ -49,8 +49,10 @@ class TestPageBehaviour(unittest.TestCase):
 
     def test_html_has_prev_next_day_controls(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
-        for marker in ('id="prev-day"', 'id="next-day"', 'id="current-date"'):
+        # 当前日期在页头右上角显示，日期切换栏只留前后两个按钮。
+        for marker in ('id="prev-day"', 'id="next-day"', 'id="hero-date"'):
             self.assertIn(marker, html)
+        self.assertNotIn('id="current-date"', html)
 
     def test_js_shows_empty_must_line(self):
         js = (ROOT / "app.js").read_text(encoding="utf-8")

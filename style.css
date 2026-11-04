@@ -49,10 +49,10 @@ body {
 .top {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem 1rem;
-  padding: 1.9rem var(--pad) 0.3rem;
+  padding: 1.5rem var(--pad) 0.3rem;
 }
 
 .brand {
@@ -77,29 +77,12 @@ body {
   letter-spacing: 0.02em;
 }
 
-/* 封面圆点：五色粉彩的签名 */
-.swatches {
+/* 日期与更新时间：页头右上角，只占自身宽度 */
+.hero-date {
   display: flex;
-  gap: 0.42rem;
-}
-
-.swatches span {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-}
-
-.swatches span:nth-child(1) {
-  background: var(--pink);
-}
-.swatches span:nth-child(2) {
-  background: var(--lemon);
-}
-.swatches span:nth-child(3) {
-  background: var(--sage);
-}
-.swatches span:nth-child(4) {
-  background: var(--lilac);
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
 }
 
 .muted {
@@ -217,28 +200,10 @@ body {
   cursor: default;
 }
 
-.current-date {
-  color: var(--ink-soft);
-  font-family: var(--serif);
-  font-size: 0.95rem;
-  letter-spacing: 0.02em;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---------- 日期封面 ---------- */
+/* ---------- 正文 ---------- */
 
 .day {
   margin-top: 0.4rem;
-}
-
-/* 日期靠右上角，只占自身宽度，不铺整幅 */
-.day-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  width: fit-content;
-  margin: 0 var(--pad) 0.9rem auto;
-  text-align: right;
 }
 
 .day-title {
@@ -647,6 +612,14 @@ body {
 .card-link:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 3px;
+}
+
+/* ---------- 窄屏：让日期与刊名同一行 ---------- */
+
+@media (max-width: 519px) {
+  .tagline {
+    display: none;
+  }
 }
 
 /* ---------- 稍宽屏幕 ---------- */

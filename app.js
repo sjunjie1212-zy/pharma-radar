@@ -149,11 +149,9 @@ function updateDayNav(day) {
   const days = state.data && Array.isArray(state.data.days) ? state.data.days : [];
   const idx = days.findIndex((d) => d && d.date === day.date);
   const nav = document.getElementById("day-nav");
-  const current = document.getElementById("current-date");
   const prev = document.getElementById("prev-day");
   const next = document.getElementById("next-day");
 
-  if (current) current.textContent = day.date || "";
   if (nav) nav.hidden = days.length < 2 || idx < 0;
 
   if (prev) {
@@ -168,14 +166,16 @@ function updateDayNav(day) {
   }
 }
 
-function dayHero(title) {
-  const hero = el("div", "day-hero");
-  hero.appendChild(el("h2", "day-title", title));
+/* 日期与更新时间放在页头右上角，不占正文版面 */
+function renderHeaderDate(title) {
+  const slot = document.getElementById("hero-date");
+  if (!slot) return;
+  slot.textContent = "";
+  slot.appendChild(el("h2", "day-title", title));
   const generatedAt = state.data && state.data.generated_at;
   if (generatedAt) {
-    hero.appendChild(el("p", "day-meta", "更新于 " + shortTime(generatedAt)));
+    slot.appendChild(el("p", "day-meta", "更新于 " + shortTime(generatedAt)));
   }
-  return hero;
 }
 
 function renderDay(dayData) {
@@ -196,7 +196,7 @@ function renderDay(dayData) {
 
   const section = el("section", "day");
   section.dataset.date = dayData.date || "";
-  section.appendChild(dayHero(dayData.date || "未知日期"));
+  renderHeaderDate(dayData.date || "未知日期");
 
   const mustSection = el("section", "must-section");
   mustSection.appendChild(el("h3", "section-title", "必看"));
@@ -323,7 +323,7 @@ function renderCatalysts(payload) {
       : [];
 
   const section = el("section", "catalysts");
-  section.appendChild(dayHero("催化剂日历"));
+  renderHeaderDate("催化剂日历");
   section.appendChild(
     el("p", "quiet", "未来 90 天的 III 期主要完成时点，按日期排序。日期来自申办方登记，可能改期。")
   );
