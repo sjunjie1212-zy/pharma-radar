@@ -115,7 +115,7 @@ class TestParseBioon(unittest.TestCase):
         first = items[0]
         self.assertEqual(first["source"], "bioon")
         self.assertEqual(first["date"], "2026-11-02")
-        self.assertEqual(first["published_at"], "2026-11-02T00:00:00+08:00")
+        self.assertEqual(first["published_at"], "2026-11-02")
         self.assertEqual(first["url"], "http://news.bioon.com/article/a8da9616261f.html")
         self.assertIn("复旦大学", first["title"])
         self.assertEqual(items[1]["date"], "2026-11-03")
@@ -281,7 +281,7 @@ def _item(title: str, url: str, source: str, day: str, weight: float) -> dict:
         title=title,
         url=canonical_url(url),
         source=source,
-        published_at=f"{day}T00:00:00+08:00",
+        published_at=day,
         date=day,
         source_weight=weight,
         lang="zh",

@@ -1,9 +1,11 @@
 import os
 import unittest
-from datetime import date
+from datetime import date, datetime, time
 from pathlib import Path
 from unittest import mock
+from zoneinfo import ZoneInfo
 
+from pipeline.window import in_window
 from sources import media_cn
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -20,7 +22,7 @@ class TestParseBioon(unittest.TestCase):
         first = items[0]
         self.assertEqual(first["source"], "bioon")
         self.assertEqual(first["date"], "2026-11-02")
-        self.assertEqual(first["published_at"], "2026-11-02T00:00:00+08:00")
+        self.assertEqual(first["published_at"], "2026-11-02")
         self.assertEqual(first["url"], "http://news.bioon.com/article/a8da9616261f.html")
         self.assertIn("复旦大学", first["title"])
         self.assertEqual(items[1]["date"], "2026-11-03")
@@ -57,6 +59,17 @@ class TestParseDrugtimes(unittest.TestCase):
     def test_category_links_skipped(self):
         items = media_cn.parse_drugtimes(_fixture("drugtimes_home.html"))
         self.assertNotIn("药物资讯", [i["title"] for i in items])
+
+
+class TestWindowBehavior(unittest.TestCase):
+    def test_previous_day_date_only_item_is_in_window(self):
+        # 列表页只给日期：锚点日 19:00 运行时，前一日发布的条目必须仍在窗口内，
+        # 否则 19:00 之后发布的条目会被永久丢掉（见 P3 复审缺陷）。
+        item = media_cn.parse_bioon(_fixture("bioon_list.html"))[0]
+        self.assertEqual(item["published_at"], "2026-11-02")
+        anchor = datetime.combine(date(2026, 11, 3), time(19, 0),
+                                 tzinfo=ZoneInfo("Asia/Shanghai"))
+        self.assertTrue(in_window(item, anchor))
 
 
 class TestProxies(unittest.TestCase):

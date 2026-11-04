@@ -67,7 +67,7 @@ def _item(title: str, url: str, source: str, day: str, weight: float) -> dict:
         title=title,
         url=canonical_url(url),
         source=source,
-        published_at=f"{day}T00:00:00+08:00",
+        published_at=day,
         date=day,
         source_weight=weight,
         lang="zh",
