@@ -8,6 +8,7 @@ from collections import defaultdict
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from pipeline import summarize
 from pipeline.gate import filter_relevant
 from pipeline.select import select
 
@@ -55,7 +56,18 @@ def _is_must(item: dict) -> bool:
     return item.get("m", 0) >= 4 and item.get("dimension") in {"D1", "D3", "D4"}
 
 
-def build(items: list[dict], out_path: str = "data/items.json") -> dict:
+def build(items: list[dict], out_path: str = "data/items.json",
+          summaries_path: str = summarize.DEFAULT_PATH) -> dict:
+    cache = summarize.load_cache(summaries_path)
+    merged: list[dict] = []
+    for item in items:
+        entry = cache.get(item.get("id") or "")
+        if entry and entry.get("title_zh"):
+            merged.append({**item, "title_zh": entry["title_zh"]})
+        else:
+            merged.append(item)
+    items = merged
+
     by_date: dict[str, list[dict]] = defaultdict(list)
     for item in items:
         by_date[item.get("date") or ""].append(item)

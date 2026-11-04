@@ -24,10 +24,14 @@ class TestAppendRaw(unittest.TestCase):
 
 
 class TestBuild(unittest.TestCase):
+    def _sum_path(self, tmp):
+        return str(pathlib.Path(tmp) / "summaries.json")
+
     def test_groups_by_date(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = pathlib.Path(tmp) / "items.json"
-            data = build([_item("a"), _item("b", date="2026-11-02")], out_path=str(out))
+            data = build([_item("a"), _item("b", date="2026-11-02")], out_path=str(out),
+                         summaries_path=self._sum_path(tmp))
             self.assertEqual(len(data["days"]), 2)
             self.assertTrue(out.exists())
             self.assertEqual(json.loads(out.read_text(encoding="utf-8"))["days"][0]["date"], "2026-11-03")
@@ -35,13 +39,15 @@ class TestBuild(unittest.TestCase):
     def test_must_selection(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = pathlib.Path(tmp) / "items.json"
-            data = build([_item("a", m=5), _item("b", m=2), _item("c", m=4, dim="D5")], out_path=str(out))
+            data = build([_item("a", m=5), _item("b", m=2), _item("c", m=4, dim="D5")], out_path=str(out),
+                         summaries_path=self._sum_path(tmp))
             self.assertEqual(data["days"][0]["must"], ["a"])
 
     def test_days_sorted_desc(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = pathlib.Path(tmp) / "items.json"
-            data = build([_item("a", date="2026-11-01"), _item("b", date="2026-11-03")], out_path=str(out))
+            data = build([_item("a", date="2026-11-01"), _item("b", date="2026-11-03")], out_path=str(out),
+                         summaries_path=self._sum_path(tmp))
             self.assertEqual([d["date"] for d in data["days"]], ["2026-11-03", "2026-11-01"])
 
     def test_render_enforces_daily_and_per_dimension_caps(self):
@@ -51,7 +57,7 @@ class TestBuild(unittest.TestCase):
                      for n in range(6)]
             items.append(_item("D1-only", dim="D1"))
             self.assertEqual(len(items), 25)
-            data = build(items, out_path=str(out))
+            data = build(items, out_path=str(out), summaries_path=self._sum_path(tmp))
             rows = data["days"][0]["items"]
             self.assertLessEqual(len(rows), 20)
             for dim in {r["dimension"] for r in rows}:
@@ -62,15 +68,15 @@ class TestBuild(unittest.TestCase):
             out = pathlib.Path(tmp) / "items.json"
             items = [_item(f"{dim}-{n}", dim=dim) for dim in ("D2", "D3", "D4", "D5")
                      for n in range(6)]
-            first = build(items, out_path=str(out))
-            second = build(items, out_path=str(out))
+            first = build(items, out_path=str(out), summaries_path=self._sum_path(tmp))
+            second = build(items, out_path=str(out), summaries_path=self._sum_path(tmp))
             self.assertEqual(first["days"], second["days"])
 
     def test_day_without_required_dimensions_builds_without_duplicates(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = pathlib.Path(tmp) / "items.json"
             items = [_item(f"d6-{n}", dim="D6") for n in range(25)]
-            data = build(items, out_path=str(out))
+            data = build(items, out_path=str(out), summaries_path=self._sum_path(tmp))
             self.assertEqual(len(data["days"]), 1)
             rows = data["days"][0]["items"]
             self.assertLessEqual(len(rows), 20)
@@ -87,7 +93,7 @@ class TestBuild(unittest.TestCase):
                       published_at=f"2026-11-03T{n:02d}:00:00")
                 for n in range(1, 8)
             ]
-            data = build(items, out_path=str(out))
+            data = build(items, out_path=str(out), summaries_path=self._sum_path(tmp))
             day = data["days"][0]
             self.assertEqual(len(day["must"]), 5)
             self.assertEqual(day["must"], ["m7", "m6", "m5", "m4", "m3"])
@@ -102,15 +108,32 @@ class TestBuild(unittest.TestCase):
             failing["title"] = "Opinion: how meditation helped me"
             passing = _item("good", source="stat")
             passing["title"] = "FDA approves new drug for NSCLC"
-            data = build([failing, passing], out_path=str(out))
+            data = build([failing, passing], out_path=str(out), summaries_path=self._sum_path(tmp))
             ids = [r["id"] for d in data["days"] for r in d["items"]]
             self.assertNotIn("bad", ids)
             self.assertIn("good", ids)
 
+    def test_merges_summaries_by_id(self):
+        with tempfile.TemporaryDirectory() as td:
+            sum_path = pathlib.Path(td) / "summaries.json"
+            sum_path.write_text(
+                json.dumps({"a": {"title_zh": "一句话提炼"}}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            items = [_item("a"), _item("b")]
+            out = pathlib.Path(td) / "items.json"
+            build(items, out_path=str(out), summaries_path=str(sum_path))
+            days = json.loads(out.read_text(encoding="utf-8"))["days"]
+        got = {i["id"]: i for i in days[0]["items"]}
+        self.assertEqual(got["a"]["title_zh"], "一句话提炼")
+        self.assertEqual(got["a"]["why"], "")
+        self.assertEqual(got["b"]["title_zh"], "")
+
     def test_js_artifact_matches_json_payload(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = pathlib.Path(tmp) / "items.json"
-            payload = build([_item("a", m=5), _item("b", date="2026-11-02")], out_path=str(out))
+            payload = build([_item("a", m=5), _item("b", date="2026-11-02")], out_path=str(out),
+                            summaries_path=self._sum_path(tmp))
             js_path = pathlib.Path(tmp) / "items.js"
             self.assertTrue(js_path.exists(), "items.js")
             js = js_path.read_text(encoding="utf-8")
