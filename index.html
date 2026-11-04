@@ -12,6 +12,9 @@
     <h1>药脉</h1>
     <span class="tagline">每日医药情报</span>
   </div>
+  <div class="swatches" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+  </div>
 </header>
 <nav class="views" aria-label="切换视图">
   <button class="view-tab active" type="button" data-view="today" aria-pressed="true">今日</button>
@@ -32,6 +35,10 @@
   <button id="next-day" class="day-btn" type="button">后一天 →</button>
 </nav>
 <main id="app"></main>
+<footer class="page-footer">
+  <span>药脉 · 每日医药情报</span>
+  <span>Pharma Radar</span>
+</footer>
 <script src="./data/catalysts.js"></script>
 <script src="./data/items.js"></script>
 <script src="./app.js"></script>
