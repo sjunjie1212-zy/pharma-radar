@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Sample</title>
+    <item>
+      <title>Company A reports Phase 3 win in NSCLC</title>
+      <link>https://example.com/a?utm_source=rss</link>
+      <pubDate>Tue, 03 Nov 2026 10:20:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>FDA approves drug B for rare disease</title>
+      <link>https://example.com/b</link>
+      <pubDate>Mon, 02 Nov 2026 08:00:00 +0000</pubDate>
+    </item>
+  </channel>
+</rss>

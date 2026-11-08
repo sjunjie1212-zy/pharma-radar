@@ -1,0 +1,16 @@
+{
+ "generated_at": "2026-11-03T19:00:00+08:00",
+ "days": [
+  {
+   "date": "2026-11-03",
+   "must": ["a"],
+   "items": [
+    {"id": "a", "date": "2026-11-03", "published_at": "2026-11-03T10:00:00", "source": "endpoints",
+     "source_weight": 1.3, "lang": "en", "title": "Phase 3 trial meets primary endpoint", "title_zh": "III 期达到主要终点",
+     "url": "https://example.com/a", "company": ["Acme"], "drug": ["ACM-101"], "target": ["PD-1"], "ta": ["NSCLC"],
+     "event_type": "clinical", "dimension": "D2", "m": 5,
+     "why": "首个同靶点头对头阳性，可能改写一线顺序", "cluster_id": "a"}
+   ]
+  }
+ ]
+}

@@ -1,0 +1,724 @@
+/* 药脉 · Soft Editorial。零依赖：奶油纸面 + 衬线标题 + 五色粉彩卡片，字体全走系统栈。 */
+
+:root {
+  --paper: #f2eedf;
+  --paper-2: #ece6d2;
+  --ink: #2a241b;
+  --ink-soft: #5c5345;
+  --pink: #e1a4c2;
+  --lemon: #d6dd63;
+  --blush: #e8c9b6;
+  --sage: #b7c7a8;
+  --lilac: #c9bedc;
+
+  --card-fill: rgba(255, 255, 255, 0.55);
+  --card-fill-hover: rgba(255, 255, 255, 0.8);
+  --rule-soft: rgba(42, 36, 27, 0.18);
+  --rule-medium: rgba(42, 36, 27, 0.35);
+
+  /* 衬线负责性格（标题、数字、饰件），无衬线负责正文与眉标 */
+  --serif: "Cormorant Garamond", "Songti SC", "STSong", "Noto Serif SC", Georgia, "Times New Roman", serif;
+  --sans: "Work Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+
+  --pad: clamp(1.25rem, 4vw, 3rem);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+}
+
+body {
+  margin: 0;
+  padding: 0 0 1rem;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---------- 页头 ---------- */
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 1.2rem var(--pad) 0.3rem;
+}
+
+/* 刊名与视图切换竖排成一列，日期在右，页头只占一行高度 */
+.masthead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.8rem;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+
+.top h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.9rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.tagline {
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+}
+
+/* 日期与更新时间：页头右上角，更新时间与日期同一行、排在其左 */
+.hero-date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.1rem 0.6rem;
+  text-align: right;
+}
+
+.muted {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 视图 / 维度筛选 ---------- */
+
+/* 视图切换在页头左列，与刊名同栏，不再单独占一行 */
+.views {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0;
+}
+
+.view-tab,
+.tab,
+.day-btn {
+  border: 1px solid var(--rule-soft);
+  background: var(--card-fill);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 0.32rem 0.9rem;
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.view-tab:hover,
+.tab:hover,
+.day-btn:hover:not(:disabled) {
+  background: var(--card-fill-hover);
+  color: var(--ink);
+}
+
+.view-tab.active {
+  background: var(--pink);
+  border-color: transparent;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* 维度筛选、日期切换与更新时间同处一行，窄屏时后两者折到第二行 */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem var(--pad) 0.9rem;
+}
+
+.tabs {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding: 0;
+  scrollbar-width: none;
+}
+
+.tabs[hidden] {
+  display: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  flex: 0 0 auto;
+  padding: 0.28rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.tab.active {
+  background: var(--lemon);
+  border-color: transparent;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.tab[data-dim="D1"].active {
+  background: var(--sage);
+}
+.tab[data-dim="D2"].active {
+  background: var(--lilac);
+}
+.tab[data-dim="D3"].active {
+  background: var(--lemon);
+}
+.tab[data-dim="D4"].active {
+  background: var(--pink);
+}
+.tab[data-dim="D5"].active {
+  background: var(--blush);
+}
+.tab[data-dim="D6"].active {
+  background: var(--paper-2);
+}
+
+/* ---------- 日期切换 ---------- */
+
+.day-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0;
+}
+
+.day-nav[hidden] {
+  display: none;
+}
+
+.day-btn {
+  background: transparent;
+}
+
+.day-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ---------- 正文 ---------- */
+
+.day {
+  margin-top: 0.4rem;
+}
+
+.day-title {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(2rem, 9vw, 4.4rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-meta {
+  flex: 0 0 auto;
+  margin: 0 0 0 auto;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- 分区标题 ---------- */
+
+.must-section,
+.all-section {
+  margin-bottom: 2.6rem;
+  padding: 0 var(--pad);
+}
+
+.all-section {
+  margin-top: 2.4rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin: 0 0 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--rule-soft);
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0;
+}
+
+.section-title::before {
+  content: "Must read";
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.all-section .section-title::before {
+  content: "Index";
+}
+
+.section-title::after {
+  content: "";
+  flex: 1;
+  align-self: center;
+  border-top: 1px dashed var(--rule-soft);
+}
+
+/* ---------- 必看：整块粉彩卡 ---------- */
+
+.must-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.2rem;
+  counter-reset: must;
+}
+
+.must-grid .card {
+  margin: 0;
+  padding: 2rem 1.7rem 1.9rem;
+  border-radius: 32px;
+  background: var(--dim-fill, var(--paper-2));
+  counter-increment: must;
+}
+
+.must-grid .card:hover {
+  background: var(--dim-fill, var(--paper-2));
+}
+
+/* 步骤序数用斜体小写罗马数字 */
+.must-grid .card::after {
+  content: counter(must, lower-roman) ".";
+  position: absolute;
+  top: 1.15rem;
+  right: 1.5rem;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: rgba(42, 36, 27, 0.42);
+}
+
+/* ---------- 卡片 ---------- */
+
+.card {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 1.3rem 1.45rem 1.35rem;
+  background: var(--card-fill);
+  border-radius: 24px;
+  transition: background 0.18s ease;
+}
+
+.card:hover {
+  background: var(--card-fill-hover);
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed var(--rule-soft);
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+
+.dim-badge {
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  background: var(--dim-fill, var(--paper-2));
+  color: var(--ink);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.must-grid .dim-badge {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.m-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.m-text {
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.m-dots {
+  display: inline-flex;
+  gap: 0.08rem;
+  font-size: 0.45rem;
+  line-height: 1;
+}
+
+.dot {
+  color: rgba(42, 36, 27, 0.18);
+}
+
+.dot.on {
+  color: rgba(42, 36, 27, 0.82);
+}
+
+.event::before {
+  content: "·";
+  margin-right: 0.35rem;
+  color: var(--ink-soft);
+  opacity: 0.6;
+}
+
+.card-title {
+  margin: 0.7rem 0 0;
+  font-family: var(--serif);
+  font-size: 1.08rem;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-wrap: pretty;
+}
+
+.must-grid .card-title {
+  margin-top: 0.85rem;
+  font-size: clamp(1.35rem, 5.4vw, 1.75rem);
+  line-height: 1.35;
+}
+
+.card-link {
+  display: inline-block;
+  margin-left: 0.35rem;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 0.9em;
+  font-weight: 400;
+  text-decoration: none;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.card-link:hover,
+.card-link:focus-visible {
+  color: var(--ink);
+  transform: translateX(2px);
+}
+
+.card-why {
+  margin: 0.5rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+
+/* 全部条目：桌面多列，移动单列 */
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.quiet {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: 1rem;
+}
+
+/* ---------- 加载 / 错误提示 ---------- */
+
+.notice {
+  margin: 1.2rem var(--pad) 0;
+  padding: 1.4rem 1.5rem;
+  background: var(--blush);
+  border-radius: 28px;
+}
+
+.notice-title {
+  margin: 0 0 0.4rem;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.notice-detail,
+.notice-hint {
+  margin: 0 0 0.6rem;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+.file-pick {
+  position: relative;
+  display: inline-block;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid var(--rule-medium);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.file-pick:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.file-pick input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* ---------- 维度粉彩 ---------- */
+
+.dim-d1 {
+  --dim: #71845c;
+  --dim-fill: var(--sage);
+}
+.dim-d2 {
+  --dim: #8478a5;
+  --dim-fill: var(--lilac);
+}
+.dim-d3 {
+  --dim: #a9b23a;
+  --dim-fill: var(--lemon);
+}
+.dim-d4 {
+  --dim: #b96a92;
+  --dim-fill: var(--pink);
+}
+.dim-d5 {
+  --dim: #b98a6e;
+  --dim-fill: var(--blush);
+}
+.dim-d6 {
+  --dim: #7c7468;
+  --dim-fill: var(--paper-2);
+}
+
+/* ---------- 催化剂 ---------- */
+
+/* 催化剂标题是五个汉字，字号收一档才能和日期、刊名挤进同一行 */
+.hero-date[data-view="catalysts"] .day-title {
+  font-size: clamp(1.35rem, 5.6vw, 3rem);
+  letter-spacing: -0.01em;
+}
+
+.catalysts > .quiet {
+  padding: 1.3rem var(--pad) 0;
+}
+
+.catalyst-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.4rem var(--pad) 0;
+}
+
+.catalyst-row {
+  background: var(--card-fill);
+  border-radius: 24px;
+  padding: 1.2rem 1.4rem 1.25rem;
+}
+
+.catalyst-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed var(--rule-soft);
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+
+.catalyst-date {
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kind-badge {
+  background: var(--blush);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.02rem 0.55rem;
+  font-weight: 500;
+}
+
+.days-left {
+  margin-left: auto;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 0.95rem;
+}
+
+.catalyst-title {
+  margin: 0.7rem 0 0.15rem;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.catalyst-note,
+.catalyst-source {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* ---------- 页脚 ---------- */
+
+.page-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+  margin: 2.8rem var(--pad) 0;
+  padding: 1rem 0 1.4rem;
+  border-top: 1px dashed var(--rule-soft);
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: 0.82rem;
+}
+
+.page-footer span:last-child {
+  font-style: italic;
+}
+
+/* ---------- 焦点可见性 ---------- */
+
+.tab:focus-visible,
+.view-tab:focus-visible,
+.day-btn:focus-visible,
+.card-link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* ---------- 窄屏：刊名与日期同一行，视图切换紧随其下 ---------- */
+
+@media (max-width: 639px) {
+  .top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 0.75rem;
+  }
+
+  .masthead {
+    display: contents;
+  }
+
+  .brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .views {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    padding-top: 1.1rem;
+  }
+
+  .hero-date {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* 窄屏放不下三组，筛选独占一行，日期切换与更新时间折到下一行 */
+  .tabs {
+    flex: 1 0 100%;
+  }
+}
+
+@media (max-width: 519px) {
+  .tagline {
+    display: none;
+  }
+}
+
+/* 320–375px：再收一点，保证刊名、更新于、日期仍在一行 */
+@media (max-width: 379px) {
+  .top h1 {
+    font-size: 1.75rem;
+  }
+
+  .day-meta {
+    font-size: 0.66rem;
+    letter-spacing: 0.03em;
+  }
+}
+
+/* ---------- 稍宽屏幕 ---------- */
+
+@media (min-width: 640px) {
+  .must-grid {
+    grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+  }
+
+  .must-grid .card {
+    padding: 2.4rem 2.2rem 2.2rem;
+  }
+
+  .list {
+    grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+  }
+
+  .day-title {
+    font-size: clamp(3rem, 6vw, 4.4rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+
+  .card-link:hover,
+  .card-link:focus-visible {
+    transform: none;
+  }
+}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>药脉 · 今日</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="top">
+  <div class="masthead">
+    <div class="brand">
+      <h1>药脉</h1>
+      <span class="tagline">每日医药情报</span>
+    </div>
+    <nav class="views" aria-label="切换视图">
+      <button class="view-tab active" type="button" data-view="today" aria-pressed="true">今日</button>
+      <button class="view-tab" type="button" data-view="catalysts" aria-pressed="false">催化剂</button>
+    </nav>
+  </div>
+  <div id="hero-date" class="hero-date"></div>
+</header>
+<div class="filters">
+  <nav class="tabs" aria-label="按维度筛选">
+    <button class="tab active" type="button" data-dim="all" aria-pressed="true">全部</button>
+    <button class="tab" type="button" data-dim="D1" aria-pressed="false">D1 格局</button>
+    <button class="tab" type="button" data-dim="D2" aria-pressed="false">D2 临床</button>
+    <button class="tab" type="button" data-dim="D3" aria-pressed="false">D3 监管</button>
+    <button class="tab" type="button" data-dim="D4" aria-pressed="false">D4 准入</button>
+    <button class="tab" type="button" data-dim="D5" aria-pressed="false">D5 商业</button>
+    <button class="tab" type="button" data-dim="D6" aria-pressed="false">D6 生态</button>
+  </nav>
+  <nav id="day-nav" class="day-nav" aria-label="切换日期" hidden>
+    <button id="prev-day" class="day-btn" type="button">← 前一天</button>
+    <button id="next-day" class="day-btn" type="button">后一天 →</button>
+  </nav>
+  <p id="day-meta" class="day-meta"></p>
+</div>
+<main id="app"></main>
+<footer class="page-footer">
+  <span>药脉 · 每日医药情报</span>
+  <span>Pharma Radar</span>
+</footer>
+<script src="./data/catalysts.js"></script>
+<script src="./data/items.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
